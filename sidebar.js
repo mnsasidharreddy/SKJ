@@ -20,6 +20,10 @@ const sidebarHTML = `
                 <i class="fas fa-tachometer-alt w-6"></i>
                 <span>Dashboard</span>
             </a>
+            <a href="cover.html" class="flex items-center px-6 py-3 hover:bg-white hover:bg-opacity-10 transition" data-page="cover.html">
+                <i class="fas fa-image w-6"></i>
+                <span>Cover Management</span>
+            </a>
             <a href="set-gold-silver.html" class="flex items-center px-6 py-3 hover:bg-white hover:bg-opacity-10 transition" data-page="set-gold-silver.html">
                 <i class="fas fa-coins w-6"></i>
                 <span>Set Gold & Silver</span>
