@@ -47,7 +47,7 @@ const siteHeader = `
     <nav class="px-8 py-2 flex items-center justify-between">
         <div class="flex items-center gap-2">
             <a href="./index.html" class="logo-container">
-                <div class="crown-icon"><img src="./images/crown_gold.png" alt="crown"></div>
+                <div class="crown-icon"><img src="images/crown_gold.png" alt="crown"></div>
                 <div class="skj-text-wrapper">
                     <span>S<span class="reveal-name">ai&nbsp;</span></span>
                     <span>K<span class="reveal-name">iran&nbsp;</span></span>
@@ -3321,4 +3321,5 @@ if (document.readyState === 'loading') {
 window.addEventListener('beforeunload', () => {
     if (typeof trendingUnsubscribe === 'function') trendingUnsubscribe();
     if (priceUnsubscribe) priceUnsubscribe();
+
 });
