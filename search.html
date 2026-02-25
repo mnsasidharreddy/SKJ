@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - Sai Kiran Jewelleries A/C</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="components.js"></script>
+    <style>
+        :root { --royal-green: #004d40; --gold: #D4AF37; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        
+        /* Search Result Card */
+        .result-card {
+            background: white;
+            border-radius: 2rem;
+            padding: 1rem;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .result-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 15px 30px rgba(212, 175, 55, 0.15);
+            transform: translateY(-4px);
+        }
+        
+        /* Image Container */
+        .image-container {
+            position: relative;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            height: 200px;
+            margin-bottom: 1rem;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .result-card:hover .image-container img {
+            transform: scale(1.05);
+        }
+        
+        /* Category Badge */
+        .category-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, var(--royal-green) 0%, #00695c 100%);
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 10;
+        }
+        
+        /* Heart Button */
+        .heart-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .heart-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .heart-btn i {
+            color: #9ca3af;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+        .heart-btn.heart-active i {
+            color: #ef4444;
+        }
+        
+        /* Action Buttons */
+        .action-btn {
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-cart {
+            background: linear-gradient(135deg, var(--royal-green) 0%, #00695c 100%);
+            color: white;
+            flex: 1;
+        }
+        .btn-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 77, 64, 0.3);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        .empty-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 3rem;
+            color: #0369a1;
+        }
+        
+        /* Search Input Large */
+        .search-box {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 0.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 0.5rem;
+            border: 2px solid var(--gold);
+            margin-left: 5px;
+        }
+        .search-input-large {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--royal-green);
+            border-radius: 1rem;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+            width: 60vw;
+        }
+        .search-input-large:focus {
+            border-color: var(--gold);
+        }
+        .search-btn-large {
+            background: linear-gradient(135deg, var(--royal-green) 0%, #00695c 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .search-btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 77, 64, 0.3);
+        }
+        
+        /* Section Title */
+        .section-title {
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.75rem;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+        
+        /* Filter Tags */
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid var(--gold);
+            color: var(--royal-green);
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .filter-tag button {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .filter-tag button:hover {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div id="header-placeholder"></div>
+    <div id="mobile-nav-placeholder"></div>
+    
+    <main class="main-content">
+        <!-- Hero Section with Search -->
+        <section class="bg-gradient-to-br from-[#004d40] via-[#00695c] to-[#004d40] py-12 md:py-20 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-0 left-0 w-72 h-72 bg-[#D4AF37] rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 right-0 w-96 h-96 bg-[#D4AF37] rounded-full blur-3xl"></div>
+            </div>
+            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 relative z-10">
+                <h1 class="font-cinzel text-2xl md:text-4xl font-bold text-white mb-6 text-center tracking-wide">
+                    Search Results
+                </h1>
+                <form id="searchFormLarge" class="search-box" onsubmit="handleLargeSearch(event)">
+                    <input 
+                        type="text" 
+                        id="largeSearchInput" 
+                        class="search-input-large" 
+                        placeholder="Search for jewelry, categories, or collections..."
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="search-btn-large">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span class="hidden sm:inline">Search</span>
+                    </button>
+                </form>
+                <div id="search-meta" class="mt-4 text-center">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- Results Section -->
+        <section class="py-8 md:py-12">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Filter/Query Display -->
+                <div id="filter-display" class="mb-6 hidden">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-gray-600 text-sm">Searching for:</span>
+                        <div class="filter-tag">
+                            <span id="current-query"></span>
+                            <button onclick="clearSearch()" title="Clear search">×</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-results" class="empty-state hidden">
+                    <div class="empty-icon">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-[#004d40] mb-3">
+                        No Results Found
+                    </h2>
+                    <p class="text-gray-600 mb-2 max-w-md mx-auto">
+                        We couldn't find any items matching your search.
+                    </p>
+                    <p class="text-gray-500 text-sm mb-6 max-w-md mx-auto">
+                        Try different keywords or browse our categories below.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <a href="rings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Rings</a>
+                        <a href="chains.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Chains</a>
+                        <a href="bracelets.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bracelets</a>
+                        <a href="harams.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Harams</a>
+                        <a href="earrings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Earrings</a>
+                        <a href="bangles.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bangles</a>
+                    </div>
+                </div>
+                
+                <!-- Results Grid -->
+                <div id="results-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    <!-- Results will be rendered here by JavaScript -->
+                </div>
+                
+                <!-- Results Count -->
+                <div id="results-count" class="mt-8 text-center text-gray-600 text-sm hidden">
+                    Found <span id="result-number" class="font-bold text-[#004d40]">0</span> items
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <div id="footer-placeholder"></div>
+    <div id="cta-placeholder"></div>
+    
+    <script>
+        // Sample jewelry data for search
+        const jewelryData = [
+            // Rings
+            { id: 101, name: "Classic Gold Ring", category: "rings", price: 45000, image: 21 },
+            { id: 102, name: "Diamond Solitaire Ring", category: "rings", price: 85000, image: 22 },
+            { id: 103, name: "Emerald Gold Ring", category: "rings", price: 62000, image: 23 },
+            { id: 104, name: "Ruby Statement Ring", category: "rings", price: 58000, image: 24 },
+            { id: 105, name: "Platinum Band Ring", category: "rings", price: 72000, image: 25 },
+            
+            // Chains
+            { id: 201, name: "22K Gold Chain", category: "chains", price: 95000, image: 31 },
+            { id: 202, name: "Rope Chain Necklace", category: "chains", price: 78000, image: 32 },
+            { id: 203, name: "Box Chain Gold", category: "chains", price: 65000, image: 33 },
+            { id: 204, name: "Figaro Chain", category: "chains", price: 82000, image: 34 },
+            
+            // Bracelets
+            { id: 301, name: "Gold Bangle Bracelet", category: "bracelets", price: 55000, image: 41 },
+            { id: 302, name: "Diamond Tennis Bracelet", category: "bracelets", price: 120000, image: 42 },
+            { id: 303, name: "Charm Bracelet Gold", category: "bracelets", price: 48000, image: 43 },
+            { id: 304, name: "Cuff Bracelet", category: "bracelets", price: 68000, image: 44 },
+            
+            // Harams
+            { id: 401, name: "Traditional Gold Haram", category: "harams", price: 185000, image: 51 },
+            { id: 402, name: "Temple Design Haram", category: "harams", price: 220000, image: 52 },
+            { id: 403, name: "Lakshmi Haram", category: "harams", price: 195000, image: 53 },
+            
+            // Earrings
+            { id: 501, name: "Gold Jhumka Earrings", category: "earrings", price: 42000, image: 61 },
+            { id: 502, name: "Diamond Stud Earrings", category: "earrings", price: 65000, image: 62 },
+            { id: 503, name: "Chandbali Earrings", category: "earrings", price: 55000, image: 63 },
+            { id: 504, name: "Hoop Earrings Gold", category: "earrings", price: 38000, image: 64 },
+            { id: 505, name: "Drop Earrings", category: "earrings", price: 48000, image: 65 },
+            
+            // Bangles
+            { id: 601, name: "Solid Gold Bangles", category: "bangles", price: 88000, image: 71 },
+            { id: 602, name: "Diamond Bangles Set", category: "bangles", price: 145000, image: 72 },
+            { id: 603, name: "Traditional Bangles", category: "bangles", price: 72000, image: 73 },
+            { id: 604, name: "Antique Finish Bangles", category: "bangles", price: 95000, image: 74 }
+        ];
+        
+        let currentQuery = '';
+        
+        // Initialize search page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get search query from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get('q');
+            
+            if (query) {
+                currentQuery = query;
+                document.getElementById('largeSearchInput').value = query;
+                performSearch(query);
+            } else {
+                showEmptySearch();
+            }
+        });
+        
+        // Handle large search form
+        function handleLargeSearch(e) {
+            e.preventDefault();
+            const query = document.getElementById('largeSearchInput').value.trim().toLowerCase();
+            if (query) {
+                currentQuery = query;
+                // Update URL without reload
+                const newUrl = window.location.pathname + '?q=' + encodeURIComponent(query);
+                window.history.pushState({ path: newUrl }, '', newUrl);
+                performSearch(query);
+            }
+        }
+        
+        // Perform search
+        function performSearch(query) {
+            const results = jewelryData.filter(item => {
+                const searchFields = [
+                    item.name.toLowerCase(),
+                    item.category.toLowerCase()
+                ];
+                return searchFields.some(field => field.includes(query));
+            });
+            
+            renderResults(results, query);
+        }
+        
+        // Render search results
+        function renderResults(results, query) {
+            const container = document.getElementById('results-container');
+            const emptyState = document.getElementById('empty-results');
+            const filterDisplay = document.getElementById('filter-display');
+            const currentQueryEl = document.getElementById('current-query');
+            const resultsCount = document.getElementById('results-count');
+            const resultNumber = document.getElementById('result-number');
+            
+            // Update filter display
+            filterDisplay.classList.remove('hidden');
+            currentQueryEl.textContent = query;
+            
+            if (results.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                resultsCount.classList.add('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            resultsCount.classList.remove('hidden');
+            resultNumber.textContent = results.length;
+            
+            container.innerHTML = results.map(item => {
+                const discount = Math.floor(Math.random() * 35) + 5;
+                const offerPrice = item.price;
+                const originalPrice = Math.round(offerPrice / (1 - (discount / 100)));
+                const isInWishlist = wishlist.some(w => w.id === item.id);
+                const heartClass = isInWishlist ? 'heart-active' : '';
+                const heartIcon = isInWishlist ? 'fa-solid' : 'fa-regular';
+                const heartColor = isInWishlist ? 'color: #ef4444;' : '';
+                
+                return `
+                    <div class="result-card" onclick="viewItem(${item.id})">
+                        <div class="image-container">
+                            <span class="category-badge">${item.category}</span>
+                            <button onclick="event.stopPropagation(); toggleWishlist(${item.id}, '${item.name}', this)" 
+                                class="heart-btn ${heartClass}">
+                                <i class="${heartIcon} fa-heart" style="${heartColor}"></i>
+                            </button>
+                            <img src="https://picsum.photos/id/${item.image}/500/500" 
+                                alt="${item.name}" 
+                                onerror="this.src='https://via.placeholder.com/500x500/004d40/D4AF37?text=SKJ'">
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-base mb-1 line-clamp-1">${item.name}</h3>
+                        <div class="flex items-baseline gap-2 mb-3">
+                            <span class="text-gray-400 text-sm line-through">₹${originalPrice.toLocaleString()}</span>
+                            <span class="text-amber-600 font-bold text-lg">₹${offerPrice.toLocaleString()}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="event.stopPropagation(); addToCart(${item.id}, '${item.name}', ${offerPrice})" 
+                                class="action-btn btn-cart">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Show empty search state
+        function showEmptySearch() {
+            document.getElementById('results-container').innerHTML = '';
+            document.getElementById('empty-results').classList.remove('hidden');
+            document.getElementById('filter-display').classList.add('hidden');
+            document.getElementById('results-count').classList.add('hidden');
+        }
+        
+        // Clear search
+        function clearSearch() {
+            document.getElementById('largeSearchInput').value = '';
+            currentQuery = '';
+            window.history.pushState({}, '', window.location.pathname);
+            showEmptySearch();
+        }
+        
+        // View item details (placeholder)
+        function viewItem(id) {
+            // Navigate to category page with item focus
+            const item = jewelryData.find(i => i.id === id);
+            if (item) {
+                window.location.href = `${item.category}.html?item=${id}`;
+            }
+        }
+        
+        // Override toggleWishlist to update UI immediately
+        const originalToggleWishlist = window.toggleWishlist;
+        window.toggleWishlist = function(id, name, btnElement) {
+            const wasInWishlist = wishlist.some(w => w.id === id);
+            
+            // Call original function
+            if (typeof originalToggleWishlist === 'function') {
+                originalToggleWishlist(id, name, btnElement);
+            } else {
+                // Fallback if original not available
+                const idx = wishlist.findIndex(w => w.id === id);
+                const icon = btnElement?.querySelector('i');
+                
+                if (idx >= 0) {
+                    wishlist.splice(idx, 1);
+                    if (icon) {
+                        icon.classList.remove('fa-solid');
+                        icon.classList.add('fa-regular');
+                        icon.style.color = '';
+                    }
+                    btnElement?.classList.remove('heart-active');
+                } else {
+                    wishlist.push({ id, name });
+                    if (icon) {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid');
+                        icon.style.color = '#ef4444';
+                    }
+                    btnElement?.classList.add('heart-active');
+                }
+                
+                localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                updateWishlistUI();
+            }
+        };
+        
+        // Listen for storage changes (sync across tabs)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'wishlist') {
+                wishlist = JSON.parse(e.newValue) || [];
+                // Refresh current search results to update heart icons
+                if (currentQuery) {
+                    performSearch(currentQuery);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
