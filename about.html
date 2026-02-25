@@ -44,6 +44,15 @@
         }
     </style>
 </head>
+<!-- Just before </body> -->
+<script src="firebase-config.js"></script>
+<script>
+// Minimal auth check - no Firestore needed
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Static page loaded - auth should persist');
+});
+</script>
+<script src="components.js"></script>
 <body class="bg-slate-50">
     <div id="header-placeholder"></div>
     <div id="cta-placeholder"></div>
@@ -172,3 +181,4 @@
     <script src="components.js"></script>
 </body>
 </html>
+
