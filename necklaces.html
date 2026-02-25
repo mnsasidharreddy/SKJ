@@ -11,19 +11,31 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { --royal-green: #004d40; --gold: #D4AF37; }
-        
-        /* Copy ALL styles from rings.html exactly */
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+        a{text-decoration: none !important;}
+       /* Product Grid - Equal size cards */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; align-items: stretch; }
         @media (max-width: 640px) { .products-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; } }
         
-        .product-card { background: white; border-radius: 1rem; overflow: hidden; border: 2px solid #e5e7eb; transition: all 0.3s ease; position: relative; display: flex; flex-direction: column; }
+        .product-card { background: white; border-radius: 1rem; overflow: hidden; border: 2px solid #e5e7eb; transition: all 0.3s ease; position: relative; display: flex; flex-direction: column; height: 100%; }
+        
+        .product-image-main { height: 200px !important; }
+        @media (max-width: 640px) { .product-image-main { height: 150px !important; } }
+        @media (min-width: 1024px) { .product-image-main { height: 220px !important; } }
+        
+        .product-info { flex: 1; display: flex; flex-direction: column; padding: 0.5rem; }
+        .product-name { flex: 1; }
+        .product-price { margin-bottom: 0.5rem; }
+        .add-to-cart-btn, .qty-control, .out-of-stock-btn { margin-top: auto; }
         
         @media (min-width: 1024px) {
             .product-card { border: 3px solid transparent; }
             .product-card:hover { border-color: var(--gold); box-shadow: 0 15px 30px rgba(212, 175, 55, 0.2); transform: translateY(-4px); }
         }
         
-        .product-card.out-of-stock { opacity: 0.6; }
+        /* Out of Stock - Simple styling */
+        .product-card.out-of-stock {
+            opacity: 0.6;
+        }
         
         .out-of-stock-btn {
             width: 100%; 
@@ -39,7 +51,7 @@
             text-transform: uppercase;
         }
         
-        /* Product Image Gallery */
+        /* Product Image Gallery Template - SAME AS CHAINS.HTML */
         .product-image-gallery {
             display: flex;
             flex-direction: column;
@@ -74,11 +86,28 @@
             flex-shrink: 0;
         }
         
-        .thumbnails-grid-4 { grid-template-columns: repeat(4, 1fr); }
-        .thumbnails-grid-3 { grid-template-columns: repeat(3, 1fr); }
-        .thumbnails-grid-2 { grid-template-columns: repeat(2, 1fr); }
-        .thumbnails-grid-1 { grid-template-columns: 1fr; max-width: 60px; margin: 0 auto; }
-        .thumbnails-grid-0 { display: none; }
+        /* Dynamic grid classes based on image count */
+        .thumbnails-grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .thumbnails-grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .thumbnails-grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .thumbnails-grid-1 {
+            grid-template-columns: 1fr;
+            max-width: 60px;
+            margin: 0 auto;
+        }
+        
+        .thumbnails-grid-0 {
+            display: none;
+        }
         
         .product-image-thumbnail {
             aspect-ratio: 1;
@@ -90,7 +119,9 @@
         }
         
         @media (min-width: 1024px) {
-            .product-image-thumbnail:hover { border-color: var(--gold); }
+            .product-image-thumbnail:hover {
+                border-color: var(--gold);
+            }
         }
         
         .product-image-thumbnail img {
@@ -118,24 +149,11 @@
             display: none;
         }
         
-        .discount-badge.show { display: block; }
-        
-        .wishlist-btn { 
-            position: absolute; 
-            top: 8px; 
-            right: 8px; 
-            width: 28px; 
-            height: 28px; 
-            background: rgba(255,255,255,0.85); 
-            border: 2px solid #e5e7eb; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            z-index: 10; 
+        .discount-badge.show {
+            display: block;
         }
+        
+        .wishlist-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; background: rgba(255,255,255,0.85); border: 2px solid #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; z-index: 10; }
         
         @media (min-width: 1024px) {
             .wishlist-btn { border: none; }
@@ -155,6 +173,7 @@
         @media (max-width: 640px) { .product-info { padding: 0.5rem; } }
         
         .product-name { font-weight: 700; color: #1f2937; margin-bottom: 0.2rem; font-size: 0.85rem; line-height: 1.2; }
+
         @media (max-width: 640px) { .product-name { font-size: 0.75rem; } }
         
         .product-price { display: flex; align-items: baseline; gap: 0.35rem; margin-bottom: 0.5rem; min-height: 1.5rem; }
@@ -163,6 +182,7 @@
         .offer-price { color: var(--gold); font-weight: 800; font-size: 0.9rem; }
         @media (max-width: 640px) { .offer-price { font-size: 0.8rem; } }
         
+        /* Price when no discount - show original price as offer price */
         .single-price {
             color: var(--gold);
             font-weight: 800;
@@ -181,72 +201,17 @@
             cursor: pointer; 
             transition: all 0.3s; 
             text-transform: uppercase; 
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .add-to-cart-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .add-to-cart-btn:active::after {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .add-to-cart-btn.added {
-            background: #10b981 !important;
         }
         
         @media (min-width: 1024px) {
             .add-to-cart-btn:hover { background: #00332b; }
         }
         
-        .qty-control { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            background: #f3f4f6; 
-            border-radius: 0.5rem; 
-            padding: 0.2rem; 
-            margin-top: auto; 
-            animation: slideUp 0.3s ease;
-        }
+        .qty-control { display: flex; align-items: center; justify-content: space-between; background: #f3f4f6; border-radius: 0.5rem; padding: 0.2rem; margin-top: auto; }
+        .qty-btn { width: 28px; height: 28px; background: var(--royal-green); color: white; border: none; border-radius: 0.35rem; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
+        .qty-display { font-weight: 700; color: var(--royal-green); min-width: 24px; text-align: center; font-size: 0.8rem; }
         
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .qty-btn { 
-            width: 28px; 
-            height: 28px; 
-            background: var(--royal-green); 
-            color: white; 
-            border: none; 
-            border-radius: 0.35rem; 
-            font-weight: 700; 
-            cursor: pointer; 
-            font-size: 0.8rem; 
-        }
-        .qty-display { 
-            font-weight: 700; 
-            color: var(--royal-green); 
-            min-width: 24px; 
-            text-align: center; 
-            font-size: 0.8rem; 
-        }
-        
-        /* Popup styles - copy from rings.html */
+        /* Popup - RESPONSIVE CENTERED MODAL - SAME AS CHAINS.HTML */
         .product-popup { 
             display: none; 
             position: fixed; 
@@ -289,6 +254,15 @@
             }
         }
         
+        @media (max-width: 480px) {
+            .popup-content {
+                width: 100vw;
+                max-height: 100vh;
+                border-radius: 0.75rem;
+                margin: 0.5rem;
+            }
+        }
+        
         .popup-image-section { 
             position: relative; 
             height: 350px; 
@@ -309,6 +283,13 @@
             } 
         }
         
+        @media (max-width: 767px) {
+            .popup-image-section { 
+                height: 280px;
+                min-height: 280px;
+            }
+        }
+        
         .popup-image-container {
             position: relative;
             width: 100%;
@@ -327,6 +308,10 @@
             object-fit: contain;
             cursor: zoom-in;
             transition: all 0.3s ease;
+        }
+        
+        .popup-main-img.zoomed {
+            cursor: zoom-out;
         }
         
         .popup-zoom-controls {
@@ -354,6 +339,69 @@
             transition: all 0.3s;
         }
         
+        .zoom-btn:hover:not([disabled]) {
+            background: var(--gold);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .zoom-btn[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .popup-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: #ef4444;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            z-index: 15;
+            display: none;
+        }
+        
+        .popup-badge.show {
+            display: block;
+        }
+        
+        .popup-heart-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 15;
+            font-size: 1.2rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .popup-heart-btn:hover {
+                transform: scale(1.15);
+                background: #ffe6e6;
+            }
+        }
+        
+        .popup-heart-btn i {
+            color: #9ca3af;
+            transition: color 0.3s;
+        }
+        
+        .popup-heart-btn.active i {
+            color: #ef4444;
+        }
+        
         .carousel-btn {
             position: absolute;
             top: 50%;
@@ -376,6 +424,13 @@
         .carousel-btn.prev { left: 0.75rem; }
         .carousel-btn.next { right: 0.75rem; }
         
+        @media (min-width: 1024px) {
+            .carousel-btn:hover {
+                background: white;
+                transform: translateY(-50%) scale(1.1);
+            }
+        }
+        
         .popup-details {
             flex: 1;
             padding: 1.5rem;
@@ -387,6 +442,13 @@
         @media (min-width: 768px) {
             .popup-details {
                 padding: 2rem;
+                min-width: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .popup-details {
+                padding: 1rem;
             }
         }
         
@@ -410,12 +472,33 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
+        @media (min-width: 1024px) {
+            .close-popup:hover {
+                color: #ef4444;
+                transform: scale(1.1);
+            }
+        }
+        
         .popup-title {
             font-size: 1.5rem;
             font-weight: 900;
             color: var(--royal-green);
             margin-bottom: 0.75rem;
             font-family: 'Cinzel', serif;
+            line-height: 1.2;
+        }
+        
+        @media (min-width: 768px) {
+            .popup-title {
+                font-size: 1.75rem;
+                margin-bottom: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .popup-title {
+                font-size: 1.25rem;
+            }
         }
         
         .popup-specs {
@@ -427,6 +510,15 @@
             border-radius: 0.75rem;
             margin-bottom: 1rem;
             font-size: 0.85rem;
+        }
+        
+        @media (min-width: 768px) {
+            .popup-specs {
+                gap: 1rem;
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+                font-size: 0.9rem;
+            }
         }
         
         .popup-specs-label {
@@ -444,6 +536,12 @@
             margin-bottom: 1rem;
         }
         
+        @media (min-width: 768px) {
+            .popup-price-section {
+                margin-bottom: 1.5rem;
+            }
+        }
+        
         .popup-original-price {
             color: #9ca3af;
             text-decoration: line-through;
@@ -459,6 +557,12 @@
             font-size: 1.75rem;
             font-weight: 900;
             color: var(--gold);
+        }
+        
+        @media (min-width: 768px) {
+            .popup-offer-price {
+                font-size: 2rem;
+            }
         }
         
         .popup-add-to-cart {
@@ -480,6 +584,14 @@
         .popup-add-to-cart:disabled {
             background: #9ca3af;
             cursor: not-allowed;
+        }
+        
+        @media (min-width: 1024px) {
+            .popup-add-to-cart:hover:not(:disabled) {
+                background: #00332b;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(0, 77, 64, 0.3);
+            }
         }
         
         .popup-qty-control {
@@ -512,6 +624,16 @@
             min-width: 40px;
             text-align: center;
         }
+
+        @media (max-width:320px){
+            .products-grid{
+                grid-template-columns: repeat(1, 1fr);
+            }
+
+            .product-image-main img{
+                max-height: 20% !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -530,181 +652,89 @@
         
         <div id="footer-placeholder"></div>
     </main>
-
-    <div id="mobile-nav-placeholder"></div>
-
-    <!-- Product Popup -->
-    <div id="product-popup" class="product-popup">
-        <div class="popup-content relative">
-            <button class="close-popup" onclick="closePopup()">&times;</button>
-            
-            <div class="popup-image-section">
-                <div class="popup-badge" id="popup-discount"></div>
-                <button onclick="event.stopPropagation(); togglePopupWishlist()" class="popup-heart-btn" id="popup-heart-btn">
-                    <i class="fa-regular fa-heart"></i>
-                </button>
-                
-                <div class="popup-image-container">
-                    <img id="popup-main-img" src="" alt="Product" class="popup-main-img">
-                    <button onclick="changePopupImg(-1)" class="carousel-btn prev">❮</button>
-                    <button onclick="changePopupImg(1)" class="carousel-btn next">❯</button>
-                </div>
-                
-                <div class="popup-zoom-controls">
-                    <button class="zoom-btn" onclick="zoomIn()" id="zoom-in-btn" title="Zoom In">+</button>
-                    <button class="zoom-btn" onclick="zoomOut()" id="zoom-out-btn" title="Zoom Out" disabled>−</button>
-                </div>
-            </div>
-            
-            <div class="popup-details">
-                <h2 id="popup-title" class="popup-title"></h2>
-                
-                <div class="popup-specs">
-                    <div>
-                        <div class="popup-specs-label">Purity</div>
-                        <div class="popup-specs-value">22K / 916 Hallmark</div>
-                    </div>
-                    <div>
-                        <div class="popup-specs-label">Gross Weight</div>
-                        <div class="popup-specs-value" id="popup-weight"></div>
-                    </div>
-                </div>
-                
-                <div class="popup-price-section">
-                    <div class="popup-original-price" id="popup-original"></div>
-                    <div class="popup-offer-price" id="popup-price"></div>
-                </div>
-                
-                <div id="popup-actions"></div>
-            </div>
-        </div>
-    </div>
-
-        <!-- Cart Sidebar -->
-    <div id="cart-sidebar" class="fixed top-0 right-0 w-full max-w-md h-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-[9000] flex flex-col">
-        <div class="flex justify-between items-center p-6 border-b">
-            <h3 class="text-xl font-bold text-emerald-950">Shopping Bag</h3>
-            <button onclick="toggleCart()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-        </div>
-        <div id="cart-items" class="flex-1 overflow-y-auto p-6">
-            <p class="text-center text-gray-400 mt-10">Your bag is empty</p>
-        </div>
-        <div class="border-t p-6 bg-gray-50">
-            <div class="flex justify-between text-lg font-bold mb-4">
-                <span>Total:</span>
-                <span id="cart-total">₹0</span>
-            </div>
-            <button onclick="openOrderPopup()" class="w-full bg-emerald-950 text-white py-3 rounded-lg font-bold hover:bg-emerald-800 transition">Order Now</button>
-        </div>
-    </div>
-
-    <!-- Login Panel (same as components.js loginPanel) -->
-    <div id="login-panel-overlay" class="fixed inset-0 bg-black/50 z-[8999] hidden" onclick="toggleLoginPanel()"></div>
-    <div id="login-panel" class="fixed top-0 right-0 w-full max-w-md h-full bg-white shadow-2xl z-[9000] transform translate-x-full transition-transform duration-300 flex flex-col">
-        <div class="bg-emerald-950 text-white p-6 flex justify-between items-center">
-            <h3 class="text-xl font-bold" id="login-panel-title">Sign In</h3>
-            <button onclick="toggleLoginPanel()" class="text-2xl hover:text-amber-400 transition">&times;</button>
-        </div>
-        <div id="login-panel-form" class="flex-1 overflow-y-auto p-6">
-            <div class="mb-6">
-                <p class="text-gray-600 mb-4">Welcome back! Please sign in to continue.</p>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                    <input type="email" id="panel-email" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Enter your email">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input type="password" id="panel-password" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Enter your password">
-                </div>
-                <div id="login-panel-error" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm"></div>
-                <button onclick="panelLogin()" class="w-full bg-emerald-950 text-white py-3 rounded-lg font-semibold hover:bg-emerald-800 transition">Sign In</button>
-            </div>
-            <div class="text-center">
-                <a href="register.html" class="text-emerald-700 hover:underline">Create Account</a>
-            </div>
-        </div>
-        <div id="login-panel-user" class="hidden flex-1 overflow-y-auto p-6">
-            <div class="text-center mb-6">
-                <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-user text-3xl text-emerald-700"></i>
-                </div>
-                <h4 class="text-lg font-bold text-gray-800" id="panel-user-name">User</h4>
-                <p class="text-sm text-gray-500" id="panel-user-email">user@email.com</p>
-            </div>
-            <div class="space-y-3">
-                <button onclick="panelLogout()" class="w-full text-left p-4 bg-red-50 rounded-lg hover:bg-red-100 transition flex items-center gap-3 text-red-700">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="font-medium">Logout</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script type="module">
-        try {
-            import('./firebase-config.js').then(module => {
-                if (module.db) {
-                    window.db = module.db;
-                    console.log('✅ Firebase initialized');
-                    loadProductsFromFirebase();
-                } else {
-                    generateFallbackProducts();
-                }
-            }).catch(err => {
-                console.log('⚠️ Firebase config not found');
-                generateFallbackProducts();
-            });
-        } catch (e) {
-            generateFallbackProducts();
-        }
-    </script>
-    
-    <script src="components.js"></script>
     <script>
-        // Copy ALL JavaScript from rings.html, changing only the category filter
+        // Product data storage
         let firebaseProducts = [];
         let productImages = {};
-        let productImageOrders = {};
         let currentPopupId = '';
         let currentImageIndex = 0;
         let zoomLevel = 1;
-        let productsUnsubscribe = null;
         
-        let touchStartX = 0, touchStartY = 0, dragStartX = 0, dragStartY = 0;
-        let isDragging = false, imageOffsetX = 0, imageOffsetY = 0;
+        // Touch/Drag variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let isDragging = false;
+        let imageOffsetX = 0;
+        let imageOffsetY = 0;
         
-        async function loadProductsFromFirebase() {
+        // Load products from Firebase Inventory
+               // Load products from Firebase Inventory
+        async function loadProductsFromInventory() {
             try {
-                const { collection, query, where, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+                // Check if firebase is ready
+                if (typeof firebase === 'undefined' || !firebase.firestore) {
+                    throw new Error('Firebase not initialized');
+                }
                 
-                if (productsUnsubscribe) productsUnsubscribe();
+                const db = firebase.firestore();
+                window.db = db; // Ensure window.db is set
                 
-                const productsRef = collection(window.db, 'products');
-                const q = query(
-                    productsRef, 
-                    where('category', '==', 'necklaces'),
-                    where('isActive', '==', true),
-                    where('onlineEnabled', '==', true)
-                );
+                const productsRef = db.collection('products');
+                const q = productsRef
+                    .where('category', '==', 'necklaces')
+                    .where('isActive', '==', true)
+                    .where('onlineEnabled', '==', true);
                 
-                productsUnsubscribe = onSnapshot(q, (querySnapshot) => {
+                // Real-time listener
+                q.onSnapshot((querySnapshot) => {
                     firebaseProducts = [];
                     querySnapshot.forEach((doc) => {
-                        firebaseProducts.push({ id: doc.id, ...doc.data() });
+                        const data = doc.data();
+                        firebaseProducts.push({
+                            id: doc.id,
+                            ...data
+                        });
                     });
-                    renderInventoryProducts();
+                    
+                    if (firebaseProducts.length === 0) {
+                        generateFallbackProducts();
+                    } else {
+                        renderInventoryProducts();
+                    }
                 }, (error) => {
-                    console.error('Error:', error);
+                    console.error('Error in snapshot:', error);
                     generateFallbackProducts();
                 });
                 
             } catch (error) {
+                console.error('Error loading products:', error);
                 generateFallbackProducts();
             }
         }
-        
+
+
+        // Fallback products when Firebase fails
+function generateFallbackProducts() {
+    const container = document.getElementById('products-container');
+    container.innerHTML = `
+        <div class="col-span-full text-center py-12">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-circle text-3xl text-gray-400"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-800 mb-2">Unable to load products</h3>
+            <p class="text-gray-500 mb-4">Please check your connection and try again</p>
+            <button onclick="loadProductsFromInventory()" class="px-6 py-2 bg-emerald-950 text-white rounded-lg hover:bg-emerald-800 transition">
+                Retry
+            </button>
+        </div>
+    `;
+}
+
+
+
+        // Get grid class based on thumbnail count
         function getThumbnailGridClass(thumbnailCount) {
             if (thumbnailCount >= 4) return 'thumbnails-grid-4';
             if (thumbnailCount === 3) return 'thumbnails-grid-3';
@@ -713,6 +743,10 @@
             return 'thumbnails-grid-0';
         }
         
+        // Store current image order for each product
+        let productImageOrders = {};
+        
+        // Render products using chains.html card template
         function renderInventoryProducts() {
             const container = document.getElementById('products-container');
             const params = new URLSearchParams(window.location.search);
@@ -721,25 +755,32 @@
             let html = '';
             
             firebaseProducts.forEach((product, index) => {
+                // Filter by search query
                 if (searchQuery && !product.name.toLowerCase().includes(searchQuery)) return;
                 
                 const discount = product.discountPercent || 0;
-                const weight = product.weight || (Math.random() * 20 + 10).toFixed(2);
+                const weight = product.weight || (Math.random() * 8 + 2).toFixed(2);
                 const offerPrice = product.offerPrice || product.price || 0;
                 const originalPrice = product.originalPrice || offerPrice;
+                
+                // Check if prices are same (no discount)
                 const hasDiscount = originalPrice > offerPrice && discount > 0;
                 
+                // Use product images or fallback
                 const images = product.images && product.images.length > 0 
                     ? [...product.images] 
-                    : Array.from({length: 5}, (_, i) => `https://picsum.photos/id/${index + 100 + i}/400/400`);
+                    : Array.from({length: 5}, (_, i) => `https://picsum.photos/id/${index + 20 + i}/400/400`);
                 
+                // Initialize or get current image order
                 if (!productImageOrders[product.id]) {
                     productImageOrders[product.id] = [...images];
                 }
                 const currentImages = productImageOrders[product.id];
                 
+                // Store for popup
                 productImages[product.id] = currentImages;
                 
+                // Calculate thumbnails (all images except first/main)
                 const thumbnails = currentImages.slice(1);
                 const thumbnailCount = thumbnails.length;
                 const gridClass = getThumbnailGridClass(thumbnailCount);
@@ -748,30 +789,53 @@
                 const inCart = cart[product.id]?.qty || 0;
                 const isOutOfStock = !product.inStock;
                 
+                // Build price display
                 let priceHtml = '';
                 if (hasDiscount) {
-                    priceHtml = `<span class="original-price">₹${originalPrice.toLocaleString()}</span><span class="offer-price">₹${offerPrice.toLocaleString()}</span>`;
+                    priceHtml = `
+                        <span class="original-price">₹${originalPrice.toLocaleString()}</span>
+                        <span class="offer-price">₹${offerPrice.toLocaleString()}</span>
+                    `;
                 } else {
                     priceHtml = `<span class="single-price">₹${originalPrice.toLocaleString()}</span>`;
                 }
                 
+                // Build button based on stock status
                 let buttonHtml = '';
                 if (isOutOfStock) {
-                    buttonHtml = `<button class="out-of-stock-btn" disabled>Out of Stock</button>`;
+                    // Out of stock - disabled button, no click action
+                    buttonHtml = `
+                        <button class="out-of-stock-btn" disabled>
+                            Out of Stock
+                        </button>
+                    `;
                 } else if (inCart > 0) {
-                    buttonHtml = `<div class="qty-control"><button class="qty-btn" onclick="event.stopPropagation(); updateCartItem('${product.id}', -1)">-</button><span class="qty-display">${inCart}</span><button class="qty-btn" onclick="event.stopPropagation(); updateCartItem('${product.id}', 1)">+</button></div>`;
+                    buttonHtml = `
+                        <div class="qty-control">
+                            <button class="qty-btn" onclick="event.stopPropagation(); updateCartItem('${product.id}', -1)">-</button>
+                            <span class="qty-display">${inCart}</span>
+                            <button class="qty-btn" onclick="event.stopPropagation(); updateCartItem('${product.id}', 1)">+</button>
+                        </div>
+                    `;
                 } else {
-                    buttonHtml = `<button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCartWithFeedback('${product.id}', '${product.name}', ${offerPrice})">Add to Cart</button>`;
+                    buttonHtml = `
+                        <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCartWithFeedback('${product.id}', '${product.name}', ${offerPrice})">
+                            Add to Cart
+                        </button>
+                    `;
                 }
                 
+                // Build discount badge (only if has discount)
                 const discountBadgeClass = hasDiscount ? 'show' : '';
                 
+                // Use chains.html card template EXACT structure with image swapping
                 html += `
                     <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${product.id}" onclick="${isOutOfStock ? '' : `openPopup('${product.id}', ${offerPrice}, ${originalPrice}, ${discount}, '${weight}', ${isOutOfStock})`}">
                         <div class="product-image-gallery">
                             <div class="product-image-main">
                                 <div class="discount-badge ${discountBadgeClass}">${discount}% OFF</div>
-                                <button onclick="event.stopPropagation(); toggleWishlistWithButton('${product.id}', '${product.name}', this)" class="wishlist-btn ${isWishlisted ? 'active' : ''}">
+                                <button onclick="event.stopPropagation(); toggleWishlistWithButton('${product.id}', '${product.name}', this)" 
+                                    class="wishlist-btn ${isWishlisted ? 'active' : ''}">
                                     <i class="${isWishlisted ? 'fa-solid text-red-500' : 'fa-regular text-gray-600'} fa-heart"></i>
                                 </button>
                                 <img src="${currentImages[0]}" alt="${product.name}" loading="lazy" class="main-product-img">
@@ -786,7 +850,9 @@
                         </div>
                         <div class="product-info">
                             <h3 class="product-name">${product.name}</h3>
-                            <div class="product-price">${priceHtml}</div>
+                            <div class="product-price">
+                                ${priceHtml}
+                            </div>
                             ${buttonHtml}
                         </div>
                     </div>
@@ -796,24 +862,36 @@
             container.innerHTML = html || '<p class="text-center text-gray-500 col-span-full py-8">No necklaces found in inventory</p>';
         }
         
+        // Swap main image with clicked thumbnail - PROPER SWAP
         function swapCardImage(productId, thumbnailIndex) {
+            // thumbnailIndex is 0-based for thumbnails array (which is images[1:])
+            // So actual image index in full array is thumbnailIndex + 1
+            
             const currentImages = productImageOrders[productId];
             if (!currentImages || thumbnailIndex + 1 >= currentImages.length) return;
             
+            // Create new array with swapped positions
             const newImages = [...currentImages];
             const mainImageIndex = 0;
             const clickedImageIndex = thumbnailIndex + 1;
             
+            // Swap: main image goes to clicked position, clicked image becomes main
             [newImages[mainImageIndex], newImages[clickedImageIndex]] = [newImages[clickedImageIndex], newImages[mainImageIndex]];
             
+            // Update stored order
             productImageOrders[productId] = newImages;
+            productImages[productId] = newImages;
             
+            // Re-render just this card's images
             const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
             if (card) {
                 const mainImg = card.querySelector('.product-image-main img.main-product-img');
                 const thumbnailImgs = card.querySelectorAll('.product-image-thumbnail img');
                 
+                // Update main image
                 mainImg.src = newImages[0];
+                
+                // Update thumbnails (skip first/main image)
                 thumbnailImgs.forEach((thumb, idx) => {
                     if (idx + 1 < newImages.length) {
                         thumb.src = newImages[idx + 1];
@@ -822,76 +900,180 @@
             }
         }
         
-        function generateFallbackProducts() {
-            const container = document.getElementById('products-container');
-            container.innerHTML = '<p class="text-center text-gray-500 col-span-full py-8">Loading necklaces...</p>';
-        }
+        // Fallback product generation (when Firebase not available)
+        async function generateProducts() {
+    const grid = document.getElementById('products-grid');
+    
+    // Filter specifically for "necklaces" from your inventory
+    const filtered = firebaseProducts.filter(p => p.category.toLowerCase() === 'necklaces');
+    
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <p class="text-gray-500 italic">No necklaces available in inventory.</p>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(product => {
+        // Check if item is already in cart to show +/- buttons
+        const inCart = cart[product.id] ? cart[product.id].qty : 0;
         
+        // Use the standardized card template
+        return createProductCard(product, inCart); 
+    }).join('');
+}
         function toggleWishlistWithButton(id, name, btn) {
+            // Require login — open sidebar instantly
+            if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) {
+                if (typeof openLoginSidebar === 'function') openLoginSidebar('Please login to add items to wishlist ❤️');
+                return;
+            }
+
             const isActive = btn.classList.contains('active');
             const icon = btn.querySelector('i');
+
+            // Find full product data from firebaseProducts
             const product = firebaseProducts.find(p => p.id === id);
 
             if (isActive) {
+                // Remove from wishlist
                 wishlist = wishlist.filter(w => w.id !== id);
                 btn.classList.remove('active');
                 icon.classList.remove('fa-solid', 'text-red-500');
                 icon.classList.add('fa-regular', 'text-gray-600');
+                if (typeof showToast === 'function') showToast('Removed from wishlist', 'info');
             } else {
+                // Add to wishlist with COMPLETE product data
                 const wishlistItem = product ? {
-                    id: product.id, name: product.name, images: product.images || productImages[id] || [],
-                    price: product.offerPrice || product.price || 0, offerPrice: product.offerPrice || product.price || 0,
+                    id: product.id,
+                    name: product.name,
+                    images: product.images || productImages[id] || [],
+                    price: product.offerPrice || product.price || 0,
+                    offerPrice: product.offerPrice || product.price || 0,
                     originalPrice: product.originalPrice || product.offerPrice || product.price || 0,
-                    weight: product.weight || '0', discountPercent: product.discountPercent || 0,
-                    inStock: product.inStock !== false, category: product.category || 'necklaces'
-                } : { id: id, name: name, images: productImages[id] || [], price: 0, offerPrice: 0, originalPrice: 0, weight: '0', discountPercent: 0, inStock: true, category: 'necklaces' };
-                
+                    weight: product.weight || '0',
+                    discountPercent: product.discountPercent || 0,
+                    inStock: product.inStock !== false,
+                    category: product.category || 'necklaces'
+                } : {
+                    id: id,
+                    name: name,
+                    images: productImages[id] || [],
+                    price: 0,
+                    offerPrice: 0,
+                    originalPrice: 0,
+                    weight: '0',
+                    discountPercent: 0,
+                    inStock: true,
+                    category: 'necklaces'
+                };
+
                 wishlist.push(wishlistItem);
                 btn.classList.add('active');
                 icon.classList.remove('fa-regular', 'text-gray-600');
                 icon.classList.add('fa-solid', 'text-red-500');
+                if (typeof showToast === 'function') showToast('Added to wishlist ❤️', 'success');
             }
 
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
             updateWishlistUI();
+            if (typeof saveUserCartAndWishlist === 'function') saveUserCartAndWishlist(); // sync to Firebase
         }
 
+
+
+
+
         function addToCartWithFeedback(id, name, price) {
-            const btn = event.target;
+            // Require login — open sidebar instantly
+            if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) {
+                if (typeof openLoginSidebar === 'function') openLoginSidebar('Please login to add items to cart 🛍️');
+                return;
+            }
+
             const currentQty = cart[id]?.qty || 0;
             const newQty = currentQty + 1;
             
-            cart[id] = { qty: newQty, n: name, p: price };
+            cart[id] = { 
+                qty: newQty, 
+                n: name, 
+                name: name,
+                p: price 
+            };
+            
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartUI();
+            if (typeof saveUserCartAndWishlist === 'function') saveUserCartAndWishlist(); // sync to Firebase
             
-            btn.classList.add('added');
+            // Visual feedback
+            const btn = event.target;
+            const originalText = btn.innerText;
             btn.innerText = 'Added!';
+            btn.style.background = '#059669';
             
             setTimeout(() => {
-                btn.classList.remove('added');
-                renderInventoryProducts();
-            }, 800);
+                if (firebaseProducts.length > 0) {
+                    renderInventoryProducts();
+                } else {
+                    generateFallbackProducts();
+                }
+            }, 500);
         }
 
-        function updateCartItem(id, delta) {
-            const currentQty = cart[id]?.qty || 0;
-            const newQty = currentQty + delta;
-            
-            if (newQty <= 0) {
-                delete cart[id];
-            } else {
-                const product = firebaseProducts.find(p => p.id === id);
-                const price = product ? (product.offerPrice || product.price || 0) : 0;
-                const name = product ? product.name : `Product #${id}`;
-                cart[id] = { qty: newQty, n: name, p: price || cart[id]?.p || 0 };
-            }
-            
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartUI();
-            renderInventoryProducts();
+        window.updateCartQty = async function(id, delta, price, originalPrice, name) {
+    // Check login for adding new items
+    if (delta > 0 && !cart[id]) {
+        if (!isUserLoggedIn()) {
+            openLoginSidebar('Please login to add items to cart 🛍️');
+            return;
         }
         
+        // Check gold safety for gold items
+        const product = typeof firebase !== 'undefined' ? 
+            await firebase.firestore().collection('products').doc(id).get().then(d => d.exists ? d.data() : null).catch(() => null) : null;
+            
+        if (product && product.metalType === 'gold' && typeof checkGoldSafetyBeforeAdd === 'function') {
+            let allowed = false;
+            await new Promise(resolve => {
+                checkGoldSafetyBeforeAdd(id, name, (result) => {
+                    allowed = result;
+                    resolve();
+                });
+            });
+            if (!allowed) return;
+        }
+    }
+    
+    const currentQty = cart[id]?.qty || 0;
+    const newQty = currentQty + delta;
+    
+    if (newQty <= 0) {
+        delete cart[id];
+    } else {
+        cart[id] = { 
+            qty: newQty, 
+            n: name, 
+            name: name,
+            p: price, 
+            op: originalPrice 
+        };
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(cart));
+    await saveUserCartAndWishlist();
+    updateCartUI();
+    
+    // Update UI components
+    if (typeof updateCartItemsList === 'function') updateCartItemsList();
+    if (typeof renderCartItems === 'function') renderCartItems();
+    if (typeof updateTrendingCardUI === 'function') updateTrendingCardUI(id, newQty, price, originalPrice, name);
+    if (document.getElementById('item-popup')?.classList.contains('active')) {
+        updatePopupButton(id, price, Math.max(0, newQty), originalPrice);
+    }
+}
+
+        // Touch/Swipe handlers for mobile
         function handleTouchStart(e) {
             if (zoomLevel > 1) {
                 touchStartX = e.touches[0].clientX;
@@ -910,11 +1092,14 @@
                 if (img) {
                     imageOffsetX += deltaX * 0.5;
                     imageOffsetY += deltaY * 0.5;
+                    
                     const maxOffset = 100 * (zoomLevel - 1) / 3;
                     imageOffsetX = Math.max(-maxOffset, Math.min(maxOffset, imageOffsetX));
                     imageOffsetY = Math.max(-maxOffset, Math.min(maxOffset, imageOffsetY));
+                    
                     img.style.transform = `scale(${zoomLevel}) translate(${imageOffsetX / zoomLevel}px, ${imageOffsetY / zoomLevel}px)`;
                 }
+                
                 touchStartX = touchX;
                 touchStartY = touchY;
                 e.preventDefault();
@@ -929,7 +1114,9 @@
                 dragStartX = e.clientX;
                 dragStartY = e.clientY;
                 const img = document.getElementById('popup-main-img');
-                if (img) img.style.cursor = 'grabbing';
+                if (img) {
+                    img.style.cursor = 'grabbing';
+                }
             }
         }
         
@@ -937,15 +1124,19 @@
             if (isDragging && zoomLevel > 1) {
                 const deltaX = e.clientX - dragStartX;
                 const deltaY = e.clientY - dragStartY;
+                
                 const img = document.getElementById('popup-main-img');
                 if (img) {
                     imageOffsetX += deltaX * 0.5;
                     imageOffsetY += deltaY * 0.5;
+                    
                     const maxOffset = 100 * (zoomLevel - 1) / 3;
                     imageOffsetX = Math.max(-maxOffset, Math.min(maxOffset, imageOffsetX));
                     imageOffsetY = Math.max(-maxOffset, Math.min(maxOffset, imageOffsetY));
+                    
                     img.style.transform = `scale(${zoomLevel}) translate(${imageOffsetX / zoomLevel}px, ${imageOffsetY / zoomLevel}px)`;
                 }
+                
                 dragStartX = e.clientX;
                 dragStartY = e.clientY;
             }
@@ -954,7 +1145,9 @@
         function handleMouseUp() {
             isDragging = false;
             const img = document.getElementById('popup-main-img');
-            if (img) img.style.cursor = 'grab';
+           if (img) {
+                img.style.cursor = 'grab';
+            }
         }
         
         function resetImageOffset() {
@@ -967,12 +1160,14 @@
             currentImageIndex = 0;
             zoomLevel = 1;
             
+            // Find product name from firebase or fallback
             const product = firebaseProducts.find(p => p.id === id);
-            const productName = product ? product.name : `Product #${id}`;
+            const productName = product ? product.name : (typeof id === 'string' ? `Product #${id}` : `Gold Ring #${id}`);
             
             document.getElementById('popup-title').innerText = productName;
             document.getElementById('popup-weight').innerText = `~${weight} Grams`;
             
+            // Handle price display
             const hasDiscount = original > price && discount > 0;
             const popupOriginal = document.getElementById('popup-original');
             const popupPrice = document.getElementById('popup-price');
@@ -990,6 +1185,7 @@
                 popupDiscount.classList.remove('show');
             }
             
+            // Set images from current order
             const currentImages = productImageOrders[id] || productImages[id] || [];
             if (currentImages.length > 0) {
                 document.getElementById('popup-main-img').src = currentImages[0];
@@ -1027,9 +1223,16 @@
             const actionsDiv = document.getElementById('popup-actions');
             
             if (isOutOfStock) {
+                // Out of stock in popup - disabled button
                 actionsDiv.innerHTML = `<button class="popup-add-to-cart" disabled>Out of Stock</button>`;
             } else if (inCart > 0) {
-                actionsDiv.innerHTML = `<div class="popup-qty-control"><button class="popup-qty-btn" onclick="updateCartItem('${id}', -1); refreshPopup(false)">−</button><span class="popup-qty-display">${inCart}</span><button class="popup-qty-btn" onclick="updateCartItem('${id}', 1); refreshPopup(false)">+</button></div>`;
+                actionsDiv.innerHTML = `
+                    <div class="popup-qty-control">
+                        <button class="popup-qty-btn" onclick="updateCartItem('${id}', -1); refreshPopup(false)">−</button>
+                        <span class="popup-qty-display">${inCart}</span>
+                        <button class="popup-qty-btn" onclick="updateCartItem('${id}', 1); refreshPopup(false)">+</button>
+                    </div>
+                `;
             } else {
                 actionsDiv.innerHTML = `<button class="popup-add-to-cart" onclick="addToCartWithFeedback('${id}', '${productName}', ${price}); refreshPopup(false)">Add to Cart</button>`;
             }
@@ -1041,6 +1244,7 @@
         function updatePopupImage() {
             const currentImages = productImageOrders[currentPopupId] || productImages[currentPopupId] || [];
             if (!currentImages.length) return;
+            
             const img = document.getElementById('popup-main-img');
             img.src = currentImages[currentImageIndex];
             img.style.transform = `scale(${zoomLevel}) translate(${imageOffsetX / zoomLevel}px, ${imageOffsetY / zoomLevel}px)`;
@@ -1050,6 +1254,7 @@
         function changePopupImg(direction) {
             const currentImages = productImageOrders[currentPopupId] || productImages[currentPopupId] || [];
             if (!currentImages.length) return;
+            
             currentImageIndex = (currentImageIndex + direction + currentImages.length) % currentImages.length;
             zoomLevel = 1;
             resetImageOffset();
@@ -1083,14 +1288,20 @@
         }
 
         function updateZoomButtons() {
-            document.getElementById('zoom-in-btn').disabled = zoomLevel >= 4;
-            document.getElementById('zoom-out-btn').disabled = zoomLevel <= 1;
+            const zoomInBtn = document.getElementById('zoom-in-btn');
+            const zoomOutBtn = document.getElementById('zoom-out-btn');
+            
+            zoomInBtn.disabled = zoomLevel >= 4;
+            zoomOutBtn.disabled = zoomLevel <= 1;
         }
 
         function togglePopupWishlist() {
             const heartBtn = document.getElementById('popup-heart-btn');
             const name = document.getElementById('popup-title').innerText;
+
+            // Find full product data from firebaseProducts
             const product = firebaseProducts.find(p => p.id === currentPopupId);
+
             const isActive = heartBtn.classList.contains('active');
             const heartIcon = heartBtn.querySelector('i');
 
@@ -1101,14 +1312,31 @@
                 heartIcon.classList.add('fa-regular');
                 heartIcon.style.color = '#9ca3af';
             } else {
+                // Add to wishlist with COMPLETE product data
                 const wishlistItem = product ? {
-                    id: product.id, name: product.name, images: product.images || productImages[currentPopupId] || [],
-                    price: product.offerPrice || product.price || 0, offerPrice: product.offerPrice || product.price || 0,
+                    id: product.id,
+                    name: product.name,
+                    images: product.images || productImages[currentPopupId] || [],
+                    price: product.offerPrice || product.price || 0,
+                    offerPrice: product.offerPrice || product.price || 0,
                     originalPrice: product.originalPrice || product.offerPrice || product.price || 0,
-                    weight: product.weight || '0', discountPercent: product.discountPercent || 0,
-                    inStock: product.inStock !== false, category: product.category || 'necklaces'
-                } : { id: currentPopupId, name: name, images: productImages[currentPopupId] || [], price: 0, offerPrice: 0, originalPrice: 0, weight: '0', discountPercent: 0, inStock: true, category: 'necklaces' };
-                
+                    weight: product.weight || '0',
+                    discountPercent: product.discountPercent || 0,
+                    inStock: product.inStock !== false,
+                    category: product.category || 'necklaces'
+                } : {
+                    id: currentPopupId,
+                    name: name,
+                    images: productImages[currentPopupId] || [],
+                    price: 0,
+                    offerPrice: 0,
+                    originalPrice: 0,
+                    weight: '0',
+                    discountPercent: 0,
+                    inStock: true,
+                    category: 'necklaces'
+                };
+
                 wishlist.push(wishlistItem);
                 heartBtn.classList.add('active');
                 heartIcon.classList.remove('fa-regular');
@@ -1130,7 +1358,13 @@
             if (isOutOfStock) {
                 actionsDiv.innerHTML = `<button class="popup-add-to-cart" disabled>Out of Stock</button>`;
             } else if (inCart > 0) {
-                actionsDiv.innerHTML = `<div class="popup-qty-control"><button class="popup-qty-btn" onclick="updateCartItem('${currentPopupId}', -1); refreshPopup(false)">−</button><span class="popup-qty-display">${inCart}</span><button class="popup-qty-btn" onclick="updateCartItem('${currentPopupId}', 1); refreshPopup(false)">+</button></div>`;
+                actionsDiv.innerHTML = `
+                    <div class="popup-qty-control">
+                        <button class="popup-qty-btn" onclick="updateCartItem('${currentPopupId}', -1); refreshPopup(false)">−</button>
+                        <span class="popup-qty-display">${inCart}</span>
+                        <button class="popup-qty-btn" onclick="updateCartItem('${currentPopupId}', 1); refreshPopup(false)">+</button>
+                    </div>
+                `;
             } else {
                 actionsDiv.innerHTML = `<button class="popup-add-to-cart" onclick="addToCartWithFeedback('${currentPopupId}', '${productName}', ${price}); refreshPopup(false)">Add to Cart</button>`;
             }
@@ -1143,26 +1377,24 @@
             currentImageIndex = 0;
         }
 
+        // Close popup on backdrop click
         document.getElementById('product-popup')?.addEventListener('click', (e) => {
             if (e.target.id === 'product-popup') closePopup();
         });
         
+        // Global mouse event listeners for drag
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
         
-        document.addEventListener('DOMContentLoaded', () => {
-            const checkDb = setInterval(() => {
-                if (window.db) {
-                    clearInterval(checkDb);
-                    loadProductsFromFirebase();
-                }
-            }, 100);
-            setTimeout(() => {
-                if (firebaseProducts.length === 0) generateFallbackProducts();
-            }, 5000);
-        });
+        // Initialize
+        // Auth is handled by components.js - no need to initialize here
+// Just log that page is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('necklaces page DOM ready');
+});
 
-        // Initialize cart and login functions
+
+// Initialize cart and login functions
 window.toggleCart = function() {
     const sidebar = document.getElementById('cart-sidebar');
     if (sidebar) {
@@ -1225,6 +1457,99 @@ window.panelLogout = async function() {
         console.error('Logout error:', e);
     }
 };
+
     </script>
+
+    <div id="mobile-nav-placeholder"></div>
+
+    <!-- Product Popup -->
+    <div id="product-popup" class="product-popup">
+        <div class="popup-content relative">
+            <button class="close-popup" onclick="closePopup()">&times;</button>
+            
+            <div class="popup-image-section">
+                <div class="popup-badge" id="popup-discount"></div>
+                <button onclick="event.stopPropagation(); togglePopupWishlist()" class="popup-heart-btn" id="popup-heart-btn">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+                
+                <div class="popup-image-container">
+                    <img id="popup-main-img" src="" alt="Product" class="popup-main-img">
+                    <button onclick="changePopupImg(-1)" class="carousel-btn prev">❮</button>
+                    <button onclick="changePopupImg(1)" class="carousel-btn next">❯</button>
+                </div>
+                
+                <div class="popup-zoom-controls">
+                    <button class="zoom-btn" onclick="zoomIn()" id="zoom-in-btn" title="Zoom In">+</button>
+                    <button class="zoom-btn" onclick="zoomOut()" id="zoom-out-btn" title="Zoom Out" disabled>−</button>
+                </div>
+            </div>
+            
+            <div class="popup-details">
+                <h2 id="popup-title" class="popup-title"></h2>
+                
+                <div class="popup-specs">
+                    <div>
+                        <div class="popup-specs-label">Purity</div>
+                        <div class="popup-specs-value">22K / 916 Hallmark</div>
+                    </div>
+                    <div>
+                        <div class="popup-specs-label">Gross Weight</div>
+                        <div class="popup-specs-value" id="popup-weight"></div>
+                    </div>
+                </div>
+                
+                <div class="popup-price-section">
+                    <div class="popup-original-price" id="popup-original"></div>
+                    <div class="popup-offer-price" id="popup-price"></div>
+                </div>
+                
+                <div id="popup-actions"></div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="components.js"></script>
+    
+        <!-- Firebase Initialization - Compat SDK -->
+    <script src="firebase-config.js"></script>
+        <!-- Firebase already initialized by components.js, just set window.db -->
+   
+    
+    
+    
+     <script>
+        // Wait for firebase to be ready from components.js
+        function initFirebase() {
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                window.db = firebase.firestore();
+                console.log('✅ Firebase ready');
+                loadProductsFromInventory();
+            } else {
+                console.log('⏳ Waiting for Firebase...');
+                setTimeout(initFirebase, 100);
+            }
+        }
+        
+        
+        
+        // Listen for inventory updates from other pages
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'inventoryUpdate') {
+                const update = JSON.parse(e.newValue);
+                if (update.category === 'necklaces') {
+                    console.log('🔄 Inventory updated, refreshing...');
+                    loadProductsFromInventory();
+                }
+            }
+        });
+
+        // Start checking
+        initFirebase();
+    </script>
+
+    
 </body>
 </html>
