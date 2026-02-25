@@ -291,14 +291,10 @@
     <!-- Toast -->
     <div id="coverToast" class="cover-toast"></div>
 
-    <!-- Firebase SDKs (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
-
     <!-- Your existing firebase-config + sidebar -->
     <script src="firebase-config.js"></script>
+
+    <!-- Firebase Storage compat — must come AFTER firebase-config.js -->
     <script src="sidebar.js"></script>
 
     <script>
@@ -318,8 +314,20 @@
     let selectedFiles    = [];              // Files staged for upload
 
     // ── Init ──────────────────────────────────────────────────────────────
-    window.addEventListener('firebase-ready', () => setTimeout(initCover, 500));
-    if (typeof firebase !== 'undefined' && firebase.apps?.length > 0) setTimeout(initCover, 300);
+    function loadStorageThenInit() {
+        if (typeof firebase !== 'undefined' && typeof firebase.storage === 'function') {
+            setTimeout(initCover, 300);
+            return;
+        }
+        const s = document.createElement('script');
+        s.src = 'https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js';
+        s.onload = () => setTimeout(initCover, 300);
+        s.onerror = () => showToast('Failed to load Firebase Storage.', 'error');
+        document.head.appendChild(s);
+    }
+
+    window.addEventListener('firebase-ready', loadStorageThenInit);
+    if (typeof firebase !== 'undefined' && firebase.apps?.length > 0) loadStorageThenInit();
 
     async function initCover() {
         if (coverInitialized) return;
@@ -383,16 +391,21 @@
         });
 }
     function triggerDelayedUpdate(images) {
-        // Cancel any existing pending timer
         if (pendingTimer) {
             clearInterval(pendingTimer);
             pendingTimer = null;
         }
 
-        let countdown = 10;
         const banner      = document.getElementById('pendingBanner');
         const countdownEl = document.getElementById('pendingCountdown');
 
+        // If the HTML elements are missing, just render immediately
+        if (!banner || !countdownEl) {
+            renderBanners(images);
+            return;
+        }
+
+        let countdown = 10;
         banner.style.display = 'flex';
         countdownEl.textContent = countdown;
 
@@ -565,7 +578,7 @@
                 const storagePath = `${STORAGE_DIR}${uniqueName}`;
                 const storageRef  = storage.ref(storagePath);
 
-                // Upload with progress
+               // Upload with progress
                 const task = storageRef.put(file);
                 await new Promise((resolve, reject) => {
                     task.on('state_changed',
@@ -575,7 +588,10 @@
                             progBar.style.width  = overall + '%';
                             progPct.textContent  = Math.round(overall) + '%';
                         },
-                        reject,
+                        (storageErr) => {
+                            console.error('Storage upload error:', storageErr.code, storageErr.message);
+                            reject(storageErr);
+                        },
                         resolve
                     );
                 });
@@ -593,9 +609,14 @@
 
                 done++;
             } catch (err) {
-                console.error('Upload error:', err);
-                showToast(`Failed to upload ${file.name}: ${err.message}`, 'error');
-                if (err.code === 'permission-denied') showPermissionError();
+                console.error('Upload error:', err.code, err.message);
+                const msg = err.code === 'storage/unauthorized'
+                    ? `Permission denied — check Firebase Storage rules for coverImages/`
+                    : err.code === 'storage/canceled'
+                    ? `Upload cancelled`
+                    : err.message || 'Unknown error';
+                showToast(`Failed: ${msg}`, 'error');
+                if (err.code === 'storage/unauthorized' || err.code === 'permission-denied') showPermissionError();
             }
         }
 

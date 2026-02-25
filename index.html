@@ -69,10 +69,16 @@
         }
 
         /* Hero Carousel */
+        /* Hero Carousel */
         .carousel-img-fixed {
             height: 500px;
             object-fit: cover;
             width: 100%;
+        }
+
+        /* Slow smooth carousel transition */
+        #heroCarousel .carousel-item {
+            transition: transform 1.2s ease-in-out !important;
         }
 
         @media (max-width: 768px) {
@@ -994,25 +1000,106 @@
     <div id="cta-placeholder"></div>
 
     <main class="main-content">
-        <!-- Hero Carousel -->
-        <!-- Keep exactly as in running website -->
-        <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <img src="./images/cover 1.webp" class="carousel-img-fixed d-block" alt="Banner 1">
-                </div>
-                <div class="carousel-item">
-                    <img src="./images/cover 2.webp" class="carousel-img-fixed d-block" alt="Banner 2">
-                </div>
-                <div class="carousel-item">
-                    <img src="./images/cover 3.jpg" class="carousel-img-fixed d-block" alt="Banner 2">
-                </div>
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel"
-                data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
-            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel"
-                data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
-        </div>
+        <!-- Hero Carousel — images loaded from Firebase -->
+<div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+    <div class="carousel-inner" id="heroCarouselInner">
+        <!-- Images loaded dynamically from Firebase -->
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel"
+        data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel"
+        data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+</div>
+
+<script>
+// ── Hero Carousel — Firebase dynamic loader with 10-second onSnapshot delay ──
+(function() {
+    let carouselPendingTimer = null;
+
+    function applyCarouselImages(images) {
+        const inner = document.getElementById('heroCarouselInner');
+        if (!inner || !images.length) return;
+
+        inner.innerHTML = '';
+        images.forEach((img, idx) => {
+            const div = document.createElement('div');
+            div.className = 'carousel-item' + (idx === 0 ? ' active' : '');
+            div.innerHTML = `<img src="${img.url}" class="carousel-img-fixed d-block" alt="Banner ${idx + 1}" loading="${idx === 0 ? 'eager' : 'lazy'}">`;
+            inner.appendChild(div);
+        });
+
+       // Reinitialise Bootstrap carousel — wait for Bootstrap JS if not yet loaded
+        const carouselEl = document.getElementById('heroCarousel');
+        function initBootstrapCarousel() {
+            if (window.bootstrap && carouselEl) {
+                const existing = bootstrap.Carousel.getInstance(carouselEl);
+                if (existing) existing.dispose();
+                new bootstrap.Carousel(carouselEl, { interval: 5000, ride: 'carousel' });
+            }
+        }
+        if (window.bootstrap) {
+            initBootstrapCarousel();
+        } else {
+            // Bootstrap JS not yet loaded — wait for it
+            const bsScript = document.querySelector('script[src*="bootstrap.bundle"]');
+            if (bsScript) {
+                bsScript.addEventListener('load', initBootstrapCarousel);
+            } else {
+                // Fallback: poll until bootstrap is available
+                const poll = setInterval(() => {
+                    if (window.bootstrap) {
+                        clearInterval(poll);
+                        initBootstrapCarousel();
+                    }
+                }, 100);
+                setTimeout(() => clearInterval(poll), 10000);
+            }
+        }
+    }
+
+    function initCarouselListener() {
+        if (typeof firebase === 'undefined') return;
+        const db = firebase.firestore();
+
+        db.collection('coverImages')
+            .orderBy('order', 'asc')
+            .onSnapshot((snapshot) => {
+    const images = [];
+    snapshot.forEach(doc => images.push(doc.data()));
+
+    if (!images.length) return; // keep static fallback if collection empty
+
+    if (!window._carouselFirstLoad) {
+        // ── First load: cancel any pending timer, apply instantly ──
+        window._carouselFirstLoad = true;
+        if (carouselPendingTimer) clearTimeout(carouselPendingTimer);
+        applyCarouselImages(images);
+    } else {
+        // ── Subsequent changes: 10-second delay ──
+        if (carouselPendingTimer) clearTimeout(carouselPendingTimer);
+        carouselPendingTimer = setTimeout(() => {
+            applyCarouselImages(images);
+        }, 10000);
+    }
+}, (err) => {
+    console.warn('Carousel listener error:', err.message);
+});
+    }
+
+    // Wait for Firebase to be ready
+    if (typeof firebase !== 'undefined' && firebase.apps?.length > 0) {
+        initCarouselListener();
+    } else {
+        window.addEventListener('firebase-ready', initCarouselListener);
+        // Extra fallback
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (typeof firebase !== 'undefined') initCarouselListener();
+            }, 2000);
+        });
+    }
+})();
+</script>
 
         <!-- Categories Section -->
         <section id="categories" class="py-16 md:py-20 px-4 md:px-10 bg-slate-50">
