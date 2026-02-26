@@ -337,35 +337,39 @@
         });
 
         function loadEnquiries() {
-            const tbody = document.getElementById('enquiriesTable');
-            tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></td></tr>';
+    const tbody = document.getElementById('enquiriesTable');
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></td></tr>';
 
-            try {
-                const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-                onSnapshot(q, (snapshot) => {
-                    allEnquiries = [];
-                    let pending = 0, contacted = 0, converted = 0, closed = 0;
+    try {
+        const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, (snapshot) => {
+            allEnquiries = [];
+            let pending = 0, contacted = 0, converted = 0, closed = 0;
 
-                    snapshot.forEach((docSnap) => {
-                        const data = docSnap.data();
-                        const date = data.createdAt?.toDate() || new Date();
-                        if (data.status === 'pending') pending++;
-                        else if (data.status === 'contacted') contacted++;
-                        else if (data.status === 'converted') converted++;
-                        else if (data.status === 'closed') closed++;
-                        allEnquiries.push({ id: docSnap.id, ...data, date });
-                    });
+            // ADD THIS LINE - Debug log
+            console.log('📦 Orders loaded:', snapshot.size);
 
-                    updateStats(allEnquiries.length, pending, contacted, converted, closed);
-                    renderTable(allEnquiries);
-                }, (error) => {
-                    console.error('Error loading orders:', error);
-                    tbody.innerHTML = '<tr><td colspan="8" class="empty-state" style="color:#991b1b"><i class="fas fa-exclamation-circle"></i><p>Error loading data</p></td></tr>';
-                });
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const date = data.createdAt?.toDate() || new Date();
+                if (data.status === 'pending') pending++;
+                else if (data.status === 'contacted') contacted++;
+                else if (data.status === 'converted') converted++;
+                else if (data.status === 'closed') closed++;
+                allEnquiries.push({ id: docSnap.id, ...data, date });
+            });
+
+            updateStats(allEnquiries.length, pending, contacted, converted, closed);
+            renderTable(allEnquiries);
+        }, (error) => {
+            console.error('❌ Error loading orders:', error);
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-state" style="color:#991b1b"><i class="fas fa-exclamation-circle"></i><p>Error: ' + error.message + '</p></td></tr>';
+        });
+    } catch (error) {
+        console.error('❌ Caught error:', error);
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state" style="color:#991b1b"><i class="fas fa-exclamation-circle"></i><p>Error: ' + error.message + '</p></td></tr>';
+    }
+}
 
         window.loadEnquiries = loadEnquiries;
 
@@ -556,3 +560,4 @@
     </script>
 </body>
 </html>
+
