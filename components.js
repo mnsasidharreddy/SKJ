@@ -2621,13 +2621,13 @@ function updateLoginPanelUI(user) {
         navIcons.forEach(icon => {
             icon.classList.remove('fa-solid', 'fa-user-check');
             icon.classList.add('fa-regular', 'fa-user');
-            icon.style.color = '#FFFFFF';
+            icon.style.color = '';
         });
         
         if (mobileIcon) {
             mobileIcon.classList.remove('fa-solid', 'fa-user-check');
             mobileIcon.classList.add('fa-regular', 'fa-user');
-            mobileIcon.style.color = '#FFFFFF';
+            mobileIcon.style.color = '';
         }
         
         if (mobileBtn) {
@@ -3323,3 +3323,4 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
+
