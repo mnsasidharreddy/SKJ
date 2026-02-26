@@ -5,6 +5,7 @@ if (window._skjComponentsLoaded) {
     throw new Error('components.js already loaded — skipping duplicate execution');
 }
 window._skjComponentsLoaded = true;
+let originalLoginHTML = "";
 // ────────────────────────────────────────────────────────────────────────────────
 
 // Price cookie helpers
@@ -299,6 +300,11 @@ const loginPanel = `
 window.toggleLoginPanel = function() {
     const panel = document.getElementById('login-panel');
     const overlay = document.getElementById('login-panel-overlay');
+    const formDiv = document.getElementById('login-panel-form');
+
+if (formDiv && !originalLoginHTML) {
+    originalLoginHTML = formDiv.innerHTML;
+}
     
     if (!panel) {
         // If panel doesn't exist, redirect to login page
@@ -433,18 +439,27 @@ window.loadRegisterInPanel = async function() {
 };
 
 window.loadLoginInPanel = function() {
-    const titleEl = document.getElementById('login-panel-title');
-    if (titleEl) titleEl.textContent = 'Sign In';
-    // Re-render original login form by reloading panel content
+
+    const formDiv = document.getElementById('login-panel-form');
     const panel = document.getElementById('login-panel');
     const overlay = document.getElementById('login-panel-overlay');
-    if (panel) {
-        panel.classList.remove('translate-x-0');
-        panel.classList.add('translate-x-full');
-        if (overlay) overlay.classList.add('hidden');
-        document.body.style.overflow = '';
+
+    // Restore original login UI
+    if (formDiv && originalLoginHTML) {
+        formDiv.innerHTML = originalLoginHTML;
     }
-    setTimeout(() => toggleLoginPanel(), 50);
+
+    // Open sidebar directly (no toggle close/open flicker)
+    if (panel) {
+        panel.classList.remove('translate-x-full');
+        panel.classList.add('translate-x-0');
+    }
+
+    if (overlay) {
+        overlay.classList.remove('hidden');
+    }
+
+    document.body.style.overflow = 'hidden';
 };
 
 window.panelRegister = async function() {
@@ -3323,4 +3338,3 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
-
