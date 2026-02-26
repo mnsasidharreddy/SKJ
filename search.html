@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="firebase-config.js"></script>
     <script src="components.js"></script>
     <style>
         :root { --royal-green: #004d40; --gold: #D4AF37; }
@@ -221,17 +222,36 @@
         .filter-tag button:hover {
             color: #ef4444;
         }
+
+        /* Loading line animation */
+@keyframes loadSlide {
+    0%   { width: 0%; }
+    60%  { width: 80%; }
+    100% { width: 100%; }
+}
+.load-line-active {
+    animation: loadSlide 0.6s ease forwards;
+}
+
+/* Skeleton card */
+.skeleton-card {
+    background: white;
+    border-radius: 2rem;
+    padding: 1rem;
+    overflow: hidden;
+}
+.skeleton-pulse {
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 0.75rem;
+}
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
     </style>
 </head>
-    <!-- Just before </body> -->
-<script src="firebase-config.js"></script>
-<script>
-// Minimal auth check - no Firestore needed
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Static page loaded - auth should persist');
-});
-</script>
-<script src="components.js"></script>
 <body>
     <div id="header-placeholder"></div>
     <div id="mobile-nav-placeholder"></div>
@@ -280,264 +300,680 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 
-                <!-- Empty State -->
-                <div id="empty-results" class="empty-state hidden">
-                    <div class="empty-icon">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </div>
-                    <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-[#004d40] mb-3">
-                        No Results Found
-                    </h2>
-                    <p class="text-gray-600 mb-2 max-w-md mx-auto">
-                        We couldn't find any items matching your search.
-                    </p>
-                    <p class="text-gray-500 text-sm mb-6 max-w-md mx-auto">
-                        Try different keywords or browse our categories below.
-                    </p>
-                    <div class="flex flex-wrap justify-center gap-3">
-                        <a href="rings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Rings</a>
-                        <a href="chains.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Chains</a>
-                        <a href="bracelets.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bracelets</a>
-                        <a href="harams.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Harams</a>
-                        <a href="earrings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Earrings</a>
-                        <a href="bangles.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bangles</a>
-                    </div>
-                </div>
+                <!-- Default Welcome State (shown before any search) -->
+<div id="welcome-state" class="text-center py-10">
+    <div style="font-size:3.5rem;margin-bottom:1rem;">💍</div>
+    <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-[#004d40] mb-3">What are you looking for?</h2>
+    <p class="text-gray-500 mb-8 max-w-md mx-auto">Search by item name or browse a category below</p>
+    <div class="flex flex-wrap justify-center gap-3">
+        <a href="rings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Rings</a>
+        <a href="chains.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Chains</a>
+        <a href="bracelets.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bracelets</a>
+        <a href="necklaces.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Necklaces</a>
+        <a href="bangles.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bangles</a>
+        <a href="harams.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Harams</a>
+        <a href="earrings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Earrings</a>
+        <a href="coins.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Coins</a>
+        <a href="other.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Other</a>
+    </div>
+</div>
+
+<!-- No Results State (shown only when search returns nothing) -->
+<div id="empty-results" class="empty-state hidden">
+    <div class="empty-icon">
+        <i class="fa-solid fa-magnifying-glass"></i>
+    </div>
+    <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-[#004d40] mb-3">No Products Found</h2>
+    <p class="text-gray-600 mb-2 max-w-md mx-auto">We couldn't find anything matching "<span id="empty-query" class="font-semibold text-[#004d40]"></span>"</p>
+    <p class="text-gray-500 text-sm mb-6 max-w-md mx-auto">Try a different spelling or browse a category instead.</p>
+    <div class="flex flex-wrap justify-center gap-3">
+        <a href="rings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Rings</a>
+        <a href="chains.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Chains</a>
+        <a href="bracelets.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bracelets</a>
+        <a href="necklaces.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Necklaces</a>
+        <a href="bangles.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Bangles</a>
+        <a href="harams.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Harams</a>
+        <a href="earrings.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Earrings</a>
+        <a href="coins.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Coins</a>
+        <a href="other.html" class="px-4 py-2 bg-white border-2 border-[#D4AF37] text-[#004d40] rounded-full font-medium hover:bg-[#D4AF37] hover:text-white transition">Other</a>
+    </div>
+</div>
                 
                 <!-- Results Grid -->
-                <div id="results-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                    <!-- Results will be rendered here by JavaScript -->
-                </div>
-                
-                <!-- Results Count -->
-                <div id="results-count" class="mt-8 text-center text-gray-600 text-sm hidden">
-                    Found <span id="result-number" class="font-bold text-[#004d40]">0</span> items
-                </div>
+<div id="results-container" class="gap-4 md:gap-6" style="display:grid;">
+    <!-- Results will be rendered here by JavaScript -->
+</div>
+
+<!-- Loading Sentinel -->
+<div id="load-sentinel" class="hidden mt-6 py-4 flex flex-col items-center gap-2">
+    <div id="load-line" class="w-full h-1 rounded-full overflow-hidden bg-gray-200">
+        <div id="load-line-bar" class="h-full bg-gradient-to-r from-[#004d40] via-[#D4AF37] to-[#004d40] animate-pulse" style="width:0%;transition:width 0.4s ease;"></div>
+    </div>
+    <span class="text-xs text-gray-400">Loading more items...</span>
+</div>
+
+<!-- Results Count -->
+<div id="results-count" class="mt-8 text-center text-gray-600 text-sm hidden">
+    Found <span id="result-number" class="font-bold text-[#004d40]">0</span> items
+</div>
             </div>
         </section>
     </main>
+
+    <!-- Item Detail Popup -->
+<div id="item-popup-overlay" onclick="closeItemPopup()"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9500;backdrop-filter:blur(4px);"></div>
+
+<div id="item-popup"
+    style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:min(90vw,900px);max-height:90vh;background:white;border-radius:2rem;
+    z-index:9501;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+    <button onclick="closeItemPopup()"
+        style="position:absolute;top:1rem;right:1rem;z-index:10;background:white;border:none;
+        width:40px;height:40px;border-radius:50%;font-size:1.4rem;cursor:pointer;
+        box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;">×</button>
+    <div id="item-popup-content" style="overflow-y:auto;max-height:90vh;display:flex;flex-wrap:wrap;">
+        <!-- filled by JS -->
+    </div>
+</div>
     
     <div id="footer-placeholder"></div>
     <div id="cta-placeholder"></div>
     
     <script>
-        // Sample jewelry data for search
-        const jewelryData = [
-            // Rings
-            { id: 101, name: "Classic Gold Ring", category: "rings", price: 45000, image: 21 },
-            { id: 102, name: "Diamond Solitaire Ring", category: "rings", price: 85000, image: 22 },
-            { id: 103, name: "Emerald Gold Ring", category: "rings", price: 62000, image: 23 },
-            { id: 104, name: "Ruby Statement Ring", category: "rings", price: 58000, image: 24 },
-            { id: 105, name: "Platinum Band Ring", category: "rings", price: 72000, image: 25 },
-            
-            // Chains
-            { id: 201, name: "22K Gold Chain", category: "chains", price: 95000, image: 31 },
-            { id: 202, name: "Rope Chain Necklace", category: "chains", price: 78000, image: 32 },
-            { id: 203, name: "Box Chain Gold", category: "chains", price: 65000, image: 33 },
-            { id: 204, name: "Figaro Chain", category: "chains", price: 82000, image: 34 },
-            
-            // Bracelets
-            { id: 301, name: "Gold Bangle Bracelet", category: "bracelets", price: 55000, image: 41 },
-            { id: 302, name: "Diamond Tennis Bracelet", category: "bracelets", price: 120000, image: 42 },
-            { id: 303, name: "Charm Bracelet Gold", category: "bracelets", price: 48000, image: 43 },
-            { id: 304, name: "Cuff Bracelet", category: "bracelets", price: 68000, image: 44 },
-            
-            // Harams
-            { id: 401, name: "Traditional Gold Haram", category: "harams", price: 185000, image: 51 },
-            { id: 402, name: "Temple Design Haram", category: "harams", price: 220000, image: 52 },
-            { id: 403, name: "Lakshmi Haram", category: "harams", price: 195000, image: 53 },
-            
-            // Earrings
-            { id: 501, name: "Gold Jhumka Earrings", category: "earrings", price: 42000, image: 61 },
-            { id: 502, name: "Diamond Stud Earrings", category: "earrings", price: 65000, image: 62 },
-            { id: 503, name: "Chandbali Earrings", category: "earrings", price: 55000, image: 63 },
-            { id: 504, name: "Hoop Earrings Gold", category: "earrings", price: 38000, image: 64 },
-            { id: 505, name: "Drop Earrings", category: "earrings", price: 48000, image: 65 },
-            
-            // Bangles
-            { id: 601, name: "Solid Gold Bangles", category: "bangles", price: 88000, image: 71 },
-            { id: 602, name: "Diamond Bangles Set", category: "bangles", price: 145000, image: 72 },
-            { id: 603, name: "Traditional Bangles", category: "bangles", price: 72000, image: 73 },
-            { id: 604, name: "Antique Finish Bangles", category: "bangles", price: 95000, image: 74 }
-        ];
-        
-        let currentQuery = '';
-        
-        // Initialize search page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get search query from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const query = urlParams.get('q');
-            
-            if (query) {
-                currentQuery = query;
-                document.getElementById('largeSearchInput').value = query;
-                performSearch(query);
-            } else {
-                showEmptySearch();
-            }
-        });
-        
-        // Handle large search form
-        function handleLargeSearch(e) {
-            e.preventDefault();
-            const query = document.getElementById('largeSearchInput').value.trim().toLowerCase();
-            if (query) {
-                currentQuery = query;
-                // Update URL without reload
-                const newUrl = window.location.pathname + '?q=' + encodeURIComponent(query);
-                window.history.pushState({ path: newUrl }, '', newUrl);
-                performSearch(query);
-            }
-        }
-        
-        // Perform search
-        function performSearch(query) {
-            const results = jewelryData.filter(item => {
-                const searchFields = [
-                    item.name.toLowerCase(),
-                    item.category.toLowerCase()
-                ];
-                return searchFields.some(field => field.includes(query));
-            });
-            
-            renderResults(results, query);
-        }
-        
-        // Render search results
-        function renderResults(results, query) {
-            const container = document.getElementById('results-container');
-            const emptyState = document.getElementById('empty-results');
-            const filterDisplay = document.getElementById('filter-display');
-            const currentQueryEl = document.getElementById('current-query');
-            const resultsCount = document.getElementById('results-count');
-            const resultNumber = document.getElementById('result-number');
-            
-            // Update filter display
-            filterDisplay.classList.remove('hidden');
-            currentQueryEl.textContent = query;
-            
-            if (results.length === 0) {
-                container.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                resultsCount.classList.add('hidden');
-                return;
-            }
-            
-            emptyState.classList.add('hidden');
-            resultsCount.classList.remove('hidden');
-            resultNumber.textContent = results.length;
-            
-            container.innerHTML = results.map(item => {
-                const discount = Math.floor(Math.random() * 35) + 5;
-                const offerPrice = item.price;
-                const originalPrice = Math.round(offerPrice / (1 - (discount / 100)));
-                const isInWishlist = wishlist.some(w => w.id === item.id);
-                const heartClass = isInWishlist ? 'heart-active' : '';
-                const heartIcon = isInWishlist ? 'fa-solid' : 'fa-regular';
-                const heartColor = isInWishlist ? 'color: #ef4444;' : '';
-                
-                return `
-                    <div class="result-card" onclick="viewItem(${item.id})">
-                        <div class="image-container">
-                            <span class="category-badge">${item.category}</span>
-                            <button onclick="event.stopPropagation(); toggleWishlist(${item.id}, '${item.name}', this)" 
-                                class="heart-btn ${heartClass}">
-                                <i class="${heartIcon} fa-heart" style="${heartColor}"></i>
-                            </button>
-                            <img src="https://picsum.photos/id/${item.image}/500/500" 
-                                alt="${item.name}" 
-                                onerror="this.src='https://via.placeholder.com/500x500/004d40/D4AF37?text=SKJ'">
-                        </div>
-                        <h3 class="font-bold text-gray-800 text-base mb-1 line-clamp-1">${item.name}</h3>
-                        <div class="flex items-baseline gap-2 mb-3">
-                            <span class="text-gray-400 text-sm line-through">₹${originalPrice.toLocaleString()}</span>
-                            <span class="text-amber-600 font-bold text-lg">₹${offerPrice.toLocaleString()}</span>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="event.stopPropagation(); addToCart(${item.id}, '${item.name}', ${offerPrice})" 
-                                class="action-btn btn-cart">
-                                <i class="fa-solid fa-bag-shopping"></i>
-                                Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Show empty search state
-        function showEmptySearch() {
-            document.getElementById('results-container').innerHTML = '';
-            document.getElementById('empty-results').classList.remove('hidden');
-            document.getElementById('filter-display').classList.add('hidden');
-            document.getElementById('results-count').classList.add('hidden');
-        }
-        
-        // Clear search
-        function clearSearch() {
-            document.getElementById('largeSearchInput').value = '';
-            currentQuery = '';
-            window.history.pushState({}, '', window.location.pathname);
-            showEmptySearch();
-        }
-        
-        // View item details (placeholder)
-        function viewItem(id) {
-            // Navigate to category page with item focus
-            const item = jewelryData.find(i => i.id === id);
-            if (item) {
-                window.location.href = `${item.category}.html?item=${id}`;
-            }
-        }
-        
-        // Override toggleWishlist to update UI immediately
-        const originalToggleWishlist = window.toggleWishlist;
-        window.toggleWishlist = function(id, name, btnElement) {
-            const wasInWishlist = wishlist.some(w => w.id === id);
-            
-            // Call original function
-            if (typeof originalToggleWishlist === 'function') {
-                originalToggleWishlist(id, name, btnElement);
-            } else {
-                // Fallback if original not available
-                const idx = wishlist.findIndex(w => w.id === id);
-                const icon = btnElement?.querySelector('i');
-                
-                if (idx >= 0) {
-                    wishlist.splice(idx, 1);
-                    if (icon) {
-                        icon.classList.remove('fa-solid');
-                        icon.classList.add('fa-regular');
-                        icon.style.color = '';
-                    }
-                    btnElement?.classList.remove('heart-active');
-                } else {
-                    wishlist.push({ id, name });
-                    if (icon) {
-                        icon.classList.remove('fa-regular');
-                        icon.classList.add('fa-solid');
-                        icon.style.color = '#ef4444';
-                    }
-                    btnElement?.classList.add('heart-active');
-                }
-                
-                localStorage.setItem('wishlist', JSON.stringify(wishlist));
-                updateWishlistUI();
-            }
-        };
-        
-        // Listen for storage changes (sync across tabs)
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'wishlist') {
-                wishlist = JSON.parse(e.newValue) || [];
-                // Refresh current search results to update heart icons
-                if (currentQuery) {
-                    performSearch(currentQuery);
-                }
-            }
-        });
-    </script>
-</body>
+    // ===================== CONFIG =====================
+    const CATEGORIES = ['rings','chains','bracelets','necklaces','bangles','harams','earrings','coins','other'];
+    const CARD_HEIGHT = 340;   // approximate px per card row
+    const CARD_MIN_W  = 220;   // min card width for column calculation
 
+    // ===================== STATE =====================
+    let currentQuery    = '';
+    let allFetchedItems = [];   // all docs fetched for current query
+    let renderedCount   = 0;
+    let isLoadingMore   = false;
+    let batchSize       = 8;    // recalculated on init
+    let colCount        = 2;
+    let sentinel        = null;
+    let observer        = null;
+
+    // ===================== GRID SIZING =====================
+    function calcLayout() {
+        const header = document.querySelector('header') || { offsetHeight: 100 };
+        const headerH = header.offsetHeight || 100;
+        const availH  = window.innerHeight - headerH;
+        const availW  = window.innerWidth;
+
+        colCount  = Math.max(2, Math.floor(availW / CARD_MIN_W));
+        const rows = Math.ceil(availH / CARD_HEIGHT) + 1;   // +1 row buffer
+        batchSize  = colCount * rows;
+
+        const container = document.getElementById('results-container');
+        if (container) {
+            container.style.gridTemplateColumns = `repeat(${colCount}, minmax(0, 1fr))`;
+        }
+    }
+
+    // ===================== FIREBASE SEARCH =====================
+    async function fetchFromFirebase(query) {
+    if (typeof firebase === 'undefined' || !firebase.firestore) {
+        throw new Error('Firebase not available');
+    }
+        const db = firebase.firestore();
+        const q  = query.trim().toLowerCase();
+
+        // Category match → fetch entire category
+        if (CATEGORIES.includes(q)) {
+            const snap = await db.collection('products')
+                .where('category', '==', q)
+                .where('inStock', '==', true)
+                .get();
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+
+        // Name prefix search using nameLower field
+        // NOTE: your Firestore products must have a `nameLower` field = name.toLowerCase()
+        // If you don't have it yet, store it when uploading products.
+        const snap = await db.collection('products')
+            .where('nameLower', '>=', q)
+            .where('nameLower', '<=', q + '\uf8ff')
+            .where('inStock', '==', true)
+            .get();
+
+        const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Also try category contains (if user typed partial category like "brac")
+        const matchedCats = CATEGORIES.filter(c => c.startsWith(q));
+        if (matchedCats.length > 0 && matchedCats[0] !== q) {
+            const catSnaps = await Promise.all(
+                matchedCats.map(cat =>
+                    db.collection('products')
+                        .where('category', '==', cat)
+                        .where('inStock', '==', true)
+                        .get()
+                )
+            );
+            for (const s of catSnaps) {
+                for (const d of s.docs) {
+                    if (!results.find(r => r.id === d.id)) {
+                        results.push({ id: d.id, ...d.data() });
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    // ===================== PRICE CALC =====================
+    function calcPrice(product) {
+        const prices = (typeof cachedPrices !== 'undefined' && cachedPrices) || { gold: 6400, skjg: 6200, silver: 750 };
+        let price = product.offerPrice || product.price || 0;
+        if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
+            const rate = product.carat === '24CT' ? prices.gold : (prices.skjg || 6200);
+            const making = (product.makingCharges || 0) * parseFloat(product.weight);
+            price = Math.round(parseFloat(product.weight) * rate + making);
+        }
+        return price;
+    }
+
+    // ===================== CARD HTML =====================
+    function buildCard(product) {
+    const price         = calcPrice(product);
+    const originalPrice = product.originalPrice || Math.round(price * 1.2);
+    const discount      = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+    const image         = (product.images && product.images[0]) || './images/placeholder.jpg';
+    const safeName      = (product.name || 'Product').replace(/'/g, "\\'");
+    const inWishlist    = (typeof wishlist !== 'undefined') && wishlist.some(w => w.id === product.id);
+    const heartCls      = inWishlist ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+    const heartColor    = inWishlist ? '#ef4444' : '#9ca3af';
+    const inCart        = (typeof cart !== 'undefined') && cart[product.id];
+    const qty           = inCart ? inCart.qty : 0;
+
+    return `
+    <div class="result-card" onclick="openItemPopup('${product.id}')">
+        <div class="image-container">
+            ${discount > 0 ? `<span style="position:absolute;bottom:12px;left:12px;background:#ef4444;color:white;padding:0.2rem 0.6rem;border-radius:999px;font-size:0.7rem;font-weight:700;z-index:10;">${discount}% OFF</span>` : ''}
+            <button onclick="event.stopPropagation(); toggleWishlist(event,'${product.id}','${safeName}',this)"
+                class="heart-btn ${inWishlist ? 'heart-active' : ''}">
+                <i class="${heartCls}" style="color:${heartColor};font-size:1.1rem;"></i>
+            </button>
+            <img src="${(product.images && product.images[0]) || './images/placeholder.jpg'}"
+                alt="${product.name || ''}"
+                onerror="this.src='./images/placeholder.jpg'"
+                loading="lazy">
+        </div>
+        <h3 class="font-bold text-gray-800 text-base mb-1 line-clamp-1">${product.name || 'Product'}</h3>
+        <div class="flex items-baseline gap-2 mb-3">
+            ${originalPrice > price ? `<span class="text-gray-400 text-sm line-through">₹${originalPrice.toLocaleString()}</span>` : ''}
+            <span class="text-amber-600 font-bold text-lg">₹${price.toLocaleString()}</span>
+        </div>
+        <div class="flex gap-2" id="cart-ctrl-${product.id}">
+            ${qty > 0
+                ? `<div class="flex items-center gap-2 w-full justify-between bg-[#004d40] rounded-xl px-3 py-2">
+                    <button onclick="event.stopPropagation(); changeQty('${product.id}','${safeName}',${price},-1)" class="text-white text-xl font-bold w-7 h-7 flex items-center justify-center hover:text-[#D4AF37] transition">−</button>
+                    <span class="text-white font-bold">${qty}</span>
+                    <button onclick="event.stopPropagation(); changeQty('${product.id}','${safeName}',${price},1)" class="text-white text-xl font-bold w-7 h-7 flex items-center justify-center hover:text-[#D4AF37] transition">+</button>
+                   </div>`
+                : `<button onclick="event.stopPropagation(); handleCartClick('${product.id}','${safeName}',${price})"
+                    class="action-btn btn-cart w-full">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    Add to Cart
+                  </button>`
+            }
+        </div>
+    </div>`;
+}
+
+
+
+// Open login if guest, else add to cart and show qty controls
+function handleCartClick(id, name, price) {
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!user) {
+        if (typeof toggleLoginPanel === 'function') toggleLoginPanel();
+        return;
+    }
+    if (typeof addToCart === 'function') addToCart(id, name, price);
+    updateCartCtrl(id, name, price);
+}
+
+function changeQty(id, name, price, delta) {
+    const user = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth().currentUser : null;
+    if (!user) {
+        if (typeof toggleLoginPanel === 'function') toggleLoginPanel();
+        return;
+    }
+    if (typeof cart === 'undefined') return;
+    const current = cart[id] ? cart[id].qty : 0;
+    const newQty = current + delta;
+    if (newQty <= 0) {
+        delete cart[id];
+    } else {
+        if (typeof addToCart === 'function') addToCart(id, name, price);
+        if (delta < 0 && cart[id]) cart[id].qty = newQty;
+    }
+    if (typeof updateCartUI === 'function') updateCartUI();
+    updateCartCtrl(id, name, price);
+}
+
+
+async function openItemPopup(id) {
+    const overlay = document.getElementById('item-popup-overlay');
+    const popup   = document.getElementById('item-popup');
+    const content = document.getElementById('item-popup-content');
+
+    overlay.style.display = 'block';
+    popup.style.display   = 'block';
+    document.body.style.overflow = 'hidden';
+
+    // Find in already-fetched items first
+    let product = allFetchedItems.find(p => p.id === id);
+
+    // Fallback: fetch from Firestore
+    if (!product) {
+        content.innerHTML = `<div style="width:100%;padding:3rem;text-align:center;">
+            <i class="fas fa-spinner fa-spin text-3xl" style="color:#004d40;"></i></div>`;
+        try {
+            const doc = await firebase.firestore().collection('products').doc(id).get();
+            if (doc.exists) product = { id: doc.id, ...doc.data() };
+        } catch(e) { console.error(e); }
+    }
+
+    if (!product) {
+        content.innerHTML = `<div style="width:100%;padding:3rem;text-align:center;color:#ef4444;">
+            Could not load product details.</div>`;
+        return;
+    }
+
+    const price         = calcPrice(product);
+    const originalPrice = product.originalPrice || Math.round(price * 1.2);
+    const discount      = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+    const images        = product.images && product.images.length ? product.images : ['./images/placeholder.jpg'];
+    const safeName      = (product.name || 'Product').replace(/'/g, "\\'");
+    const inWishlist    = (typeof wishlist !== 'undefined') && wishlist.some(w => w.id === product.id);
+    const heartCls      = inWishlist ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+    const heartColor    = inWishlist ? '#ef4444' : '#9ca3af';
+    const qty           = (typeof cart !== 'undefined' && cart[id]) ? cart[id].qty : 0;
+
+    content.innerHTML = `
+        <!-- Images side -->
+        <div style="flex:1;min-width:280px;max-width:420px;background:#f8fafc;padding:1.5rem;display:flex;flex-direction:column;gap:0.75rem;">
+            <img id="popup-main-img" src="${images[0]}" onerror="this.src='./images/placeholder.jpg'"
+                style="width:100%;height:300px;object-fit:cover;border-radius:1.5rem;">
+            ${images.length > 1 ? `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                ${images.map((img, i) => `
+                    <img src="${img}" onerror="this.src='./images/placeholder.jpg'"
+                        onclick="document.getElementById('popup-main-img').src='${img}'"
+                        style="width:64px;height:64px;object-fit:cover;border-radius:0.75rem;cursor:pointer;
+                        border:2px solid ${i===0?'#D4AF37':'#e5e7eb'};transition:border 0.2s;">`).join('')}
+            </div>` : ''}
+        </div>
+
+        <!-- Details side -->
+        <div style="flex:1;min-width:260px;padding:2rem;display:flex;flex-direction:column;gap:1rem;">
+            <div>
+                ${discount > 0 ? `<span style="background:#ef4444;color:white;padding:0.2rem 0.7rem;border-radius:999px;font-size:0.75rem;font-weight:700;">${discount}% OFF</span>` : ''}
+                <h2 style="font-family:'Cinzel',serif;font-size:1.4rem;font-weight:700;color:#004d40;margin-top:0.5rem;line-height:1.3;">${product.name || 'Product'}</h2>
+                <p style="color:#6b7280;font-size:0.85rem;text-transform:capitalize;">${product.category || ''}</p>
+            </div>
+
+            <div style="display:flex;align-items:baseline;gap:0.75rem;">
+                ${originalPrice > price ? `<span style="color:#9ca3af;text-decoration:line-through;font-size:1rem;">₹${originalPrice.toLocaleString()}</span>` : ''}
+                <span style="color:#d97706;font-weight:800;font-size:1.75rem;">₹${price.toLocaleString()}</span>
+            </div>
+
+            ${product.weight ? `<div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                <div style="background:#f0fdf4;padding:0.5rem 1rem;border-radius:0.75rem;font-size:0.85rem;">
+                    <span style="color:#6b7280;">Weight</span><br>
+                    <strong style="color:#004d40;">${product.weight}g</strong>
+                </div>
+                ${product.carat ? `<div style="background:#f0fdf4;padding:0.5rem 1rem;border-radius:0.75rem;font-size:0.85rem;">
+                    <span style="color:#6b7280;">Purity</span><br>
+                    <strong style="color:#004d40;">${product.carat}</strong>
+                </div>` : ''}
+                ${product.metalType ? `<div style="background:#f0fdf4;padding:0.5rem 1rem;border-radius:0.75rem;font-size:0.85rem;">
+                    <span style="color:#6b7280;">Metal</span><br>
+                    <strong style="color:#004d40;text-transform:capitalize;">${product.metalType}</strong>
+                </div>` : ''}
+            </div>` : ''}
+
+            ${product.description ? `<p style="color:#4b5563;font-size:0.9rem;line-height:1.6;">${product.description}</p>` : ''}
+
+            <!-- Cart + Wishlist -->
+            <div style="display:flex;gap:0.75rem;margin-top:auto;padding-top:1rem;">
+                <div id="popup-cart-ctrl-${id}" style="flex:1;">
+                    ${qty > 0
+                        ? `<div style="display:flex;align-items:center;justify-content:space-between;background:#004d40;border-radius:1rem;padding:0.6rem 1rem;">
+                            <button onclick="changeQty('${id}','${safeName}',${price},-1); refreshPopupCart('${id}','${safeName}',${price})"
+                                style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">−</button>
+                            <span style="color:white;font-weight:700;" id="popup-qty-${id}">${qty}</span>
+                            <button onclick="changeQty('${id}','${safeName}',${price},1); refreshPopupCart('${id}','${safeName}',${price})"
+                                style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">+</button>
+                           </div>`
+                        : `<button onclick="handleCartClick('${id}','${safeName}',${price}); refreshPopupCart('${id}','${safeName}',${price})"
+                            style="width:100%;background:linear-gradient(135deg,#004d40,#00695c);color:white;border:none;
+                            padding:0.85rem;border-radius:1rem;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+                            <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+                          </button>`
+                    }
+                </div>
+                <button onclick="toggleWishlist(event,'${id}','${safeName}',this)"
+                    id="popup-heart-${id}"
+                    class="${inWishlist ? 'heart-active' : ''}"
+                    style="width:48px;height:48px;border-radius:1rem;background:#f3f4f6;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">
+                    <i class="${heartCls}" style="color:${heartColor};"></i>
+                </button>
+            </div>
+        </div>`;
+}
+
+function refreshPopupCart(id, name, price) {
+    // Update popup qty display
+    const ctrl = document.getElementById(`popup-cart-ctrl-${id}`);
+    if (!ctrl) return;
+    updateCartCtrl(id, name, price); // update card too
+    const qty = (typeof cart !== 'undefined' && cart[id]) ? cart[id].qty : 0;
+    const safeName = name.replace(/'/g, "\\'");
+    if (qty > 0) {
+        ctrl.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;background:#004d40;border-radius:1rem;padding:0.6rem 1rem;">
+                <button onclick="changeQty('${id}','${safeName}',${price},-1); refreshPopupCart('${id}','${safeName}',${price})"
+                    style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">−</button>
+                <span style="color:white;font-weight:700;">${qty}</span>
+                <button onclick="changeQty('${id}','${safeName}',${price},1); refreshPopupCart('${id}','${safeName}',${price})"
+                    style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">+</button>
+            </div>`;
+    } else {
+        ctrl.innerHTML = `
+            <button onclick="handleCartClick('${id}','${safeName}',${price}); refreshPopupCart('${id}','${safeName}',${price})"
+                style="width:100%;background:linear-gradient(135deg,#004d40,#00695c);color:white;border:none;
+                padding:0.85rem;border-radius:1rem;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+                <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+            </button>`;
+    }
+}
+
+function closeItemPopup() {
+    document.getElementById('item-popup-overlay').style.display = 'none';
+    document.getElementById('item-popup').style.display         = 'none';
+    document.body.style.overflow = '';
+}
+
+// Close popup on Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeItemPopup(); });
+
+function updateCartCtrl(id, name, price) {
+    const ctrl = document.getElementById(`cart-ctrl-${id}`);
+    if (!ctrl) return;
+    const qty = (typeof cart !== 'undefined' && cart[id]) ? cart[id].qty : 0;
+    const safeName = name.replace(/'/g, "\\'");
+    if (qty > 0) {
+        ctrl.innerHTML = `
+            <div class="flex items-center gap-2 w-full justify-between bg-[#004d40] rounded-xl px-3 py-2">
+                <button onclick="event.stopPropagation(); changeQty('${id}','${safeName}',${price},-1)" class="text-white text-xl font-bold w-7 h-7 flex items-center justify-center hover:text-[#D4AF37] transition">−</button>
+                <span class="text-white font-bold">${qty}</span>
+                <button onclick="event.stopPropagation(); changeQty('${id}','${safeName}',${price},1)" class="text-white text-xl font-bold w-7 h-7 flex items-center justify-center hover:text-[#D4AF37] transition">+</button>
+            </div>`;
+    } else {
+        ctrl.innerHTML = `
+            <button onclick="event.stopPropagation(); handleCartClick('${id}','${safeName}',${price})"
+                class="action-btn btn-cart w-full">
+                <i class="fa-solid fa-bag-shopping"></i>
+                Add to Cart
+            </button>`;
+    }
+}
+
+    function buildSkeleton(n) {
+        return Array.from({ length: n }, () => `
+        <div class="skeleton-card">
+            <div class="skeleton-pulse" style="height:200px;margin-bottom:1rem;"></div>
+            <div class="skeleton-pulse" style="height:16px;width:70%;margin-bottom:0.5rem;"></div>
+            <div class="skeleton-pulse" style="height:16px;width:40%;margin-bottom:1rem;"></div>
+            <div class="skeleton-pulse" style="height:40px;"></div>
+        </div>`).join('');
+    }
+
+    // ===================== RENDER BATCH =====================
+    function renderNextBatch() {
+        if (renderedCount >= allFetchedItems.length) {
+            hideSentinel();
+            return;
+        }
+
+        const batch = allFetchedItems.slice(renderedCount, renderedCount + batchSize);
+        const container = document.getElementById('results-container');
+
+        // Remove skeleton placeholders if any
+        container.querySelectorAll('.skeleton-card').forEach(el => el.remove());
+
+        batch.forEach(product => {
+            const div = document.createElement('div');
+            div.innerHTML = buildCard(product);
+            container.appendChild(div.firstElementChild);
+        });
+
+        renderedCount += batch.length;
+
+        const countEl = document.getElementById('result-number');
+        if (countEl) countEl.textContent = allFetchedItems.length;
+
+        if (renderedCount < allFetchedItems.length) {
+            showSentinel();
+        } else {
+            hideSentinel();
+        }
+    }
+
+    // ===================== SENTINEL / OBSERVER =====================
+    function showSentinel() {
+        sentinel = document.getElementById('load-sentinel');
+        if (!sentinel) return;
+        sentinel.classList.remove('hidden');
+        sentinel.style.display = 'flex';
+
+        // Animate the loading line
+        const bar = document.getElementById('load-line-bar');
+        if (bar) {
+            bar.style.width = '0%';
+            requestAnimationFrame(() => {
+                bar.classList.add('load-line-active');
+            });
+        }
+
+        if (!observer) {
+            observer = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting && !isLoadingMore) {
+                    isLoadingMore = true;
+                    const bar = document.getElementById('load-line-bar');
+                    if (bar) {
+                        bar.style.width = '0%';
+                        bar.classList.remove('load-line-active');
+                        void bar.offsetWidth; // reflow
+                        bar.classList.add('load-line-active');
+                    }
+                    setTimeout(() => {
+                        renderNextBatch();
+                        isLoadingMore = false;
+                    }, 500); // small delay so user sees the line animate
+                }
+            }, { threshold: 0.1 });
+        }
+        observer.observe(sentinel);
+    }
+
+    function hideSentinel() {
+        sentinel = document.getElementById('load-sentinel');
+        if (sentinel) {
+            sentinel.classList.add('hidden');
+            sentinel.style.display = 'none';
+        }
+        if (observer && sentinel) {
+            observer.unobserve(sentinel);
+        }
+    }
+
+    // ===================== PERFORM SEARCH =====================
+    async function performSearch(query) {
+        if (!query || !query.trim()) { showEmptySearch(); return; }
+        document.getElementById('welcome-state')?.classList.add('hidden');
+        calcLayout();
+
+        const container     = document.getElementById('results-container');
+        const emptyState    = document.getElementById('empty-results');
+        const filterDisplay = document.getElementById('filter-display');
+        const currentQueryEl = document.getElementById('current-query');
+        const resultsCount  = document.getElementById('results-count');
+
+        // Reset state
+        allFetchedItems = [];
+        renderedCount   = 0;
+        hideSentinel();
+        if (observer) { observer.disconnect(); observer = null; }
+
+        // Show filter tag
+        if (filterDisplay) filterDisplay.classList.remove('hidden');
+        if (currentQueryEl) currentQueryEl.textContent = query;
+        if (emptyState) emptyState.classList.add('hidden');
+        if (resultsCount) resultsCount.classList.remove('hidden');
+
+        // Show skeleton while loading
+        container.style.gridTemplateColumns = `repeat(${colCount}, minmax(0, 1fr))`;
+        container.innerHTML = buildSkeleton(batchSize);
+
+        try {
+            allFetchedItems = await fetchFromFirebase(query);
+        } catch (e) {
+            console.error('Search error:', e);
+            container.innerHTML = `<div style="grid-column:1/-1;" class="text-center py-12 text-red-500">
+                <i class="fa-solid fa-triangle-exclamation text-3xl mb-3"></i>
+                <p>Could not load results. Please check your connection and try again.</p>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = ''; // clear skeletons
+
+        if (allFetchedItems.length === 0) {
+    document.getElementById('welcome-state')?.classList.add('hidden');
+    const emptyQuery = document.getElementById('empty-query');
+    if (emptyQuery) emptyQuery.textContent = query;
+    emptyState?.classList.remove('hidden');
+    resultsCount?.classList.add('hidden');
+    return;
+}
+
+        renderNextBatch(); // renders first batchSize items
+    }
+
+    // ===================== SHOW EMPTY =====================
+    function showEmptySearch() {
+    document.getElementById('results-container').innerHTML = '';
+    document.getElementById('welcome-state')?.classList.remove('hidden');
+    document.getElementById('empty-results')?.classList.add('hidden');
+    document.getElementById('filter-display')?.classList.add('hidden');
+    document.getElementById('results-count')?.classList.add('hidden');
+    hideSentinel();
+}
+
+    // ===================== CLEAR SEARCH =====================
+    function clearSearch() {
+        document.getElementById('largeSearchInput').value = '';
+        currentQuery = '';
+        window.history.pushState({}, '', window.location.pathname);
+        showEmptySearch();
+    }
+
+    // ===================== LARGE SEARCH FORM =====================
+    let searchDebounce = null;
+    function handleLargeSearch(e) {
+        if (e) e.preventDefault();
+        const query = document.getElementById('largeSearchInput').value.trim().toLowerCase();
+        if (!query) { showEmptySearch(); return; }
+        currentQuery = query;
+        const newUrl = window.location.pathname + '?q=' + encodeURIComponent(query);
+        window.history.pushState({ path: newUrl }, '', newUrl);
+        performSearch(query);
+    }
+
+    // Live search as user types (debounced 400ms)
+    function onSearchInput() {
+    clearTimeout(searchDebounce);
+    const query = document.getElementById('largeSearchInput').value.trim().toLowerCase();
+    if (!query) { showEmptySearch(); return; }
+    searchDebounce = setTimeout(() => {
+        currentQuery = query;
+        const newUrl = window.location.pathname + '?q=' + encodeURIComponent(query);
+        window.history.pushState({ path: newUrl }, '', newUrl);
+        waitForFirebaseThenSearch(query);
+    }, 400);
+}
+
+    // ===================== VIEW ITEM =====================
+    function viewItem(id, category) {
+        window.location.href = `${category}.html?item=${id}`;
+    }
+
+    // ===================== WISHLIST SYNC =====================
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'wishlist') {
+            if (typeof wishlist !== 'undefined') wishlist = JSON.parse(e.newValue) || [];
+            if (currentQuery) performSearch(currentQuery);
+        }
+    });
+
+    // ===================== INIT =====================
+    // Wait for Firebase to be ready, then search
+function waitForFirebaseThenSearch(query) {
+    // If Firebase is already ready, search immediately
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+        performSearch(query);
+        return;
+    }
+
+    // Otherwise wait for the firebase-ready event fired by firebase-config.js
+    const onReady = () => {
+        window.removeEventListener('firebase-ready', onReady);
+        performSearch(query);
+    };
+    window.addEventListener('firebase-ready', onReady);
+
+    // Safety fallback — if event never fires after 8s show error
+    setTimeout(() => {
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            window.removeEventListener('firebase-ready', onReady);
+            console.error('Firebase never became available');
+            const container = document.getElementById('results-container');
+            if (container) container.innerHTML = `
+                <div style="grid-column:1/-1;" class="text-center py-12 text-red-500">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl mb-3 block"></i>
+                    <p>Connection error. Please refresh the page and try again.</p>
+                </div>`;
+        }
+    }, 8000);
+}
+document.addEventListener('DOMContentLoaded', function() {
+    calcLayout();
+
+    const inp = document.getElementById('largeSearchInput');
+    if (inp) inp.addEventListener('input', onSearchInput);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('q');
+    if (query) {
+        currentQuery = query;
+        if (inp) inp.value = query;
+        waitForFirebaseThenSearch(query);
+    } else {
+        showEmptySearch();
+    }
+
+    window.addEventListener('resize', () => {
+        calcLayout();
+        const container = document.getElementById('results-container');
+        if (container) container.style.gridTemplateColumns = `repeat(${colCount}, minmax(0, 1fr))`;
+    });
+});
+</script>
+</body>
 </html>
