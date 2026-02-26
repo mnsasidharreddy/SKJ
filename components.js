@@ -2636,7 +2636,7 @@ function updateLoginPanelUI(user) {
         navIcons.forEach(icon => {
             icon.classList.remove('fa-solid', 'fa-user-check');
             icon.classList.add('fa-regular', 'fa-user');
-            icon.style.color = '';
+            icon.style.color = '#ffffff';
         });
         
         if (mobileIcon) {
@@ -3338,3 +3338,4 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
+
