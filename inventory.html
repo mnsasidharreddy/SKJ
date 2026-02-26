@@ -1022,46 +1022,47 @@
                                 </label>
                             </div>
                             <p style="font-size: 12px; color: #6b7280; margin-top: 8px; margin-left: 35px;">
-                                When enabled, price is automatically calculated: (Weight × Live Rate) + Making Charges - Discount.
+                                When enabled, price is automatically calculated: (Weight × Live Rate) + Making Charges.
                                 Disable to set prices manually.
                             </p>
                         </div>
                     </div>
 
                     <!-- Dynamic Price Breakdown (shown when dynamic pricing ON) -->
-                    <div id="dynamic-price-display" class="form-row">
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <div class="calc-result"
-                                style="background: #dbeafe; color: #1e40af; padding: 15px; border-radius: 8px;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                    <i class="fas fa-calculator"></i>
-                                    <strong>Dynamic Price Calculation</strong>
-                                </div>
-                                <div
-                                    style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; font-size: 13px;">
-                                    <div>
-                                        <span style="color: #64748b;">Market Rate:</span>
-                                        <div id="dynamic-market-rate" style="font-weight: 600; font-size: 16px;">₹0/gm
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span style="color: #64748b;">Making Charges:</span>
-                                        <div id="dynamic-making-total" style="font-weight: 600; font-size: 16px;">₹0
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span style="color: #64748b;">Discount:</span>
-                                        <div id="dynamic-discount-display" style="font-weight: 600; font-size: 16px; color: #dc2626;">₹0</div>
-                                    </div>
-                                    <div>
-                                        <span style="color: #64748b;">Final Price:</span>
-                                        <div id="dynamic-final-price"
-                                            style="font-weight: 700; font-size: 18px; color: #059669;">₹0</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Dynamic Price Breakdown (shown when dynamic pricing ON) -->
+<div id="dynamic-price-display" class="form-row">
+    <div class="form-group" style="grid-column: 1 / -1;">
+        <div class="calc-result"
+            style="background: #dbeafe; color: #1e40af; padding: 15px; border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <i class="fas fa-calculator"></i>
+                <strong>Dynamic Price Calculation</strong>
+            </div>
+            <div
+                style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; font-size: 13px;">
+                <div>
+                    <span style="color: #64748b;">Market Rate:</span>
+                    <div id="dynamic-market-rate" style="font-weight: 600; font-size: 16px;">₹0/gm
                     </div>
+                </div>
+                <div>
+                    <span style="color: #64748b;">Making Charges:</span>
+                    <div id="dynamic-making-total" style="font-weight: 600; font-size: 16px;">₹0
+                    </div>
+                </div>
+                <div>
+                    <span style="color: #64748b;">Discount:</span>
+                    <div id="dynamic-discount-display" style="font-weight: 600; font-size: 16px; color: #dc2626;">₹0</div>
+                </div>
+                <div>
+                    <span style="color: #64748b;">Final Price:</span>
+                    <div id="dynamic-final-price"
+                        style="font-weight: 700; font-size: 18px; color: #059669;">₹0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
                     <!-- Manual Price Section (shown when dynamic pricing OFF) -->
                     <div id="manual-price-section" class="form-row" style="display: none;">
@@ -1085,12 +1086,12 @@
                         <div class="form-group">
                             <label>Discount Percentage (%)</label>
                             <input type="number" id="prod-discount-percent" placeholder="10" min="0" max="100"
-                                step="0.01" oninput="calculateAutoPrice()">
+                                step="0.01" oninput="calculatePrices('upload')">
                         </div>
                         <div class="form-group">
                             <label>Discount Amount (₹)</label>
                             <input type="number" id="prod-discount-amount" placeholder="5000" min="0"
-                                oninput="calculateAutoPrice()">
+                                oninput="calculatePrices('upload')">
                         </div>
                     </div>
 
@@ -1210,7 +1211,7 @@
             <form id="edit-form" onsubmit="handleEditProduct(event)">
                 <input type="hidden" id="edit-product-id">
 
-                <!-- Category & Name -->
+                <!-- Category & Name — FIXED: use edit- prefix, not prod- -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>Category</label>
@@ -1261,7 +1262,7 @@
                     </div>
                     <div class="form-group" id="edit-carat-field" style="opacity: 0.5; pointer-events: none;">
                         <label>Carat</label>
-                        <select id="edit-carat" disabled onchange="calculateEditTotalMakingCharges(); toggleEditDynamicPricing();">
+                        <select id="edit-carat" disabled onchange="toggleEditDynamicPricing()">
                             <option value="">Select Carat</option>
                             <option value="24CT">24CT</option>
                             <option value="22CT">22CT</option>
@@ -1294,42 +1295,42 @@
                             </label>
                         </div>
                         <p style="font-size: 12px; color: #6b7280; margin-top: 8px; margin-left: 35px;">
-                            When enabled, price is auto-calculated: (Weight × Live Rate) + Making Charges - Discount.
+                            When enabled, price is auto-calculated: (Weight × Live Rate) + Making Charges.
                         </p>
                     </div>
                 </div>
 
                 <!-- Edit Dynamic Price Breakdown (shown when dynamic ON) -->
-                <div id="edit-dynamic-price-display" style="display: none; margin-bottom: 15px;">
-                    <div class="calc-result"
-                        style="background: #dbeafe; color: #1e40af; padding: 15px; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <i class="fas fa-calculator"></i>
-                            <strong>Dynamic Price Calculation</strong>
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; font-size: 13px;">
-                            <div>
-                                <span style="color: #64748b;">Market Rate:</span>
-                                <div id="edit-dynamic-market-rate" style="font-weight: 600; font-size: 16px;">₹0/gm
-                                </div>
-                            </div>
-                            <div>
-                                <span style="color: #64748b;">Making Charges:</span>
-                                <div id="edit-dynamic-making-total" style="font-weight: 600; font-size: 16px;">₹0</div>
-                            </div>
-                            <div>
-                                <span style="color: #64748b;">Discount:</span>
-                                <div id="edit-dynamic-discount-display" style="font-weight: 600; font-size: 16px; color: #dc2626;">₹0</div>
-                            </div>
-                            <div>
-                                <span style="color: #64748b;">Final Price:</span>
-                                <div id="edit-dynamic-final-price"
-                                    style="font-weight: 700; font-size: 18px; color: #059669;">₹0</div>
-                            </div>
-                        </div>
-                    </div>
+           <!-- Edit Dynamic Price Breakdown (shown when dynamic ON) -->
+<div id="edit-dynamic-price-display" style="display: none; margin-bottom: 15px;">
+    <div class="calc-result"
+        style="background: #dbeafe; color: #1e40af; padding: 15px; border-radius: 8px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <i class="fas fa-calculator"></i>
+            <strong>Dynamic Price Calculation</strong>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; font-size: 13px;">
+            <div>
+                <span style="color: #64748b;">Market Rate:</span>
+                <div id="edit-dynamic-market-rate" style="font-weight: 600; font-size: 16px;">₹0/gm
                 </div>
-
+            </div>
+            <div>
+                <span style="color: #64748b;">Making Charges:</span>
+                <div id="edit-dynamic-making-total" style="font-weight: 600; font-size: 16px;">₹0</div>
+            </div>
+            <div>
+                <span style="color: #64748b;">Discount:</span>
+                <div id="edit-dynamic-discount-display" style="font-weight: 600; font-size: 16px; color: #dc2626;">₹0</div>
+            </div>
+            <div>
+                <span style="color: #64748b;">Final Price:</span>
+                <div id="edit-dynamic-final-price"
+                    style="font-weight: 700; font-size: 18px; color: #059669;">₹0</div>
+            </div>
+        </div>
+    </div>
+</div>
                 <!-- Manual Price Fields (shown when dynamic OFF) -->
                 <div id="edit-manual-price-section">
                     <div class="form-row">
@@ -1463,202 +1464,201 @@
         };
 
         // ---- ADD FORM: calculate price from live rates ----
-        window.calculateAutoPrice = function () {
-            const metalType = document.getElementById('prod-metal-type').value;
-            const weight = parseFloat(document.getElementById('prod-weight').value) || 0;
-            const carat = document.getElementById('prod-carat').value;
-            const makingCharges = parseFloat(document.getElementById('prod-making-charges').value) || 0;
-            const isDynamic = document.getElementById('prod-dynamic-pricing') &&
-                document.getElementById('prod-dynamic-pricing').checked;
+       window.calculateAutoPrice = function () {
+    const metalType = document.getElementById('prod-metal-type').value;
+    const weight = parseFloat(document.getElementById('prod-weight').value) || 0;
+    const carat = document.getElementById('prod-carat').value;
+    const makingCharges = parseFloat(document.getElementById('prod-making-charges').value) || 0;
+    const isDynamic = document.getElementById('prod-dynamic-pricing') &&
+        document.getElementById('prod-dynamic-pricing').checked;
 
-            if (!isDynamic) return;
+    if (!isDynamic) return;
 
-            const totalMakingCharges = makingCharges * weight;
-            const marketRateEl = document.getElementById('dynamic-market-rate');
-            const makingTotalEl = document.getElementById('dynamic-making-total');
-            const finalPriceEl = document.getElementById('dynamic-final-price');
+    const totalMakingCharges = makingCharges * weight;
+    const marketRateEl = document.getElementById('dynamic-market-rate');
+    const makingTotalEl = document.getElementById('dynamic-making-total');
+    const finalPriceEl = document.getElementById('dynamic-final-price');
 
-            if (!metalType || weight <= 0) {
-                if (marketRateEl) marketRateEl.textContent = '₹0/gm';
-                if (makingTotalEl) makingTotalEl.textContent = '₹0';
-                if (finalPriceEl) finalPriceEl.textContent = '₹0';
-                return;
-            }
+    if (!metalType || weight <= 0) {
+        if (marketRateEl) marketRateEl.textContent = '₹0/gm';
+        if (makingTotalEl) makingTotalEl.textContent = '₹0';
+        if (finalPriceEl) finalPriceEl.textContent = '₹0';
+        return;
+    }
 
-            let calculatedPrice = 0;
-            let ratePerGram = 0;
+    let calculatedPrice = 0;
+    let ratePerGram = 0;
 
-            if (metalType === 'gold') {
-                if (!carat) {
-                    if (marketRateEl) marketRateEl.textContent = 'Select carat first';
-                    return;
-                }
-                ratePerGram = carat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
-                if (!ratePerGram) {
-                    if (marketRateEl) marketRateEl.textContent = 'Price not loaded yet';
-                    return;
-                }
-                calculatedPrice = (weight * ratePerGram) + totalMakingCharges;
-                if (marketRateEl) marketRateEl.textContent = '₹' + ratePerGram.toLocaleString() + '/gm (' + carat + ')';
-            } else if (metalType === 'silver') {
-                ratePerGram = window.latestPrices.silver / 10;
-                if (!ratePerGram) {
-                    if (marketRateEl) marketRateEl.textContent = 'Price not loaded yet';
-                    return;
-                }
-                calculatedPrice = (weight * ratePerGram) + totalMakingCharges;
-                if (marketRateEl) marketRateEl.textContent = '₹' + ratePerGram.toFixed(2) + '/gm (Silver)';
-            } else {
-                // "other" — dynamic pricing should be disabled, but just in case
-                return;
-            }
+    if (metalType === 'gold') {
+        if (!carat) {
+            if (marketRateEl) marketRateEl.textContent = 'Select carat first';
+            return;
+        }
+        ratePerGram = carat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
+        if (!ratePerGram) {
+            if (marketRateEl) marketRateEl.textContent = 'Price not loaded yet';
+            return;
+        }
+        calculatedPrice = (weight * ratePerGram) + totalMakingCharges;
+        if (marketRateEl) marketRateEl.textContent = '₹' + ratePerGram.toLocaleString() + '/gm (' + carat + ')';
+    } else if (metalType === 'silver') {
+        ratePerGram = window.latestPrices.silver / 10;
+        if (!ratePerGram) {
+            if (marketRateEl) marketRateEl.textContent = 'Price not loaded yet';
+            return;
+        }
+        calculatedPrice = (weight * ratePerGram) + totalMakingCharges;
+        if (marketRateEl) marketRateEl.textContent = '₹' + ratePerGram.toFixed(2) + '/gm (Silver)';
+    } else {
+        // "other" — dynamic pricing should be disabled, but just in case
+        return;
+    }
 
-            // ===== APPLY DISCOUNT CALCULATION =====
-            const discountPercentInput = document.getElementById('prod-discount-percent');
-            const discountAmountInput = document.getElementById('prod-discount-amount');
-            const discountPercent = parseFloat(discountPercentInput.value) || 0;
-            const discountAmount = parseFloat(discountAmountInput.value) || 0;
+    // ===== NEW: Apply discount calculation =====
+   // ===== NEW: Apply discount calculation =====
+const discountPercentInput = document.getElementById('prod-discount-percent');
+const discountAmountInput = document.getElementById('prod-discount-amount');
+const discountPercent = parseFloat(discountPercentInput.value) || 0;
+const discountAmount = parseFloat(discountAmountInput.value) || 0;
 
-            let finalDiscount = 0;
-            let finalDiscountPercent = 0;
+let finalDiscount = 0;
+let finalDiscountPercent = 0;
 
-            // Check which field was modified
-            const activeElement = document.activeElement;
-            const activeId = activeElement ? activeElement.id : '';
+// Check which field was modified
+const activeElement = document.activeElement;
+const activeId = activeElement ? activeElement.id : '';
 
-            // Only update the other field if the current field is being edited
-            if (activeId === 'prod-discount-percent' && discountPercent > 0) {
-                // User is typing in percentage field
-                finalDiscount = Math.round((calculatedPrice * discountPercent) / 100);
-                finalDiscountPercent = discountPercent;
-                // Only update amount field, don't trigger recalculation
-                discountAmountInput.value = finalDiscount;
-            } else if (activeId === 'prod-discount-amount' && discountAmount > 0) {
-                // User is typing in amount field
-                finalDiscount = discountAmount;
-                finalDiscountPercent = calculatedPrice > 0 ? ((discountAmount / calculatedPrice) * 100) : 0;
-                // Only update percent field, don't trigger recalculation
-                discountPercentInput.value = finalDiscountPercent.toFixed(2);
-            } else {
-                // Not actively editing - use whatever values are present
-                if (discountPercent > 0) {
-                    finalDiscount = Math.round((calculatedPrice * discountPercent) / 100);
-                    finalDiscountPercent = discountPercent;
-                } else if (discountAmount > 0) {
-                    finalDiscount = discountAmount;
-                    finalDiscountPercent = calculatedPrice > 0 ? ((discountAmount / calculatedPrice) * 100) : 0;
-                }
-            }
+// Only update the other field if the current field is being edited
+if (activeId === 'prod-discount-percent' && discountPercent > 0) {
+    // User is typing in percentage field
+    finalDiscount = Math.round((calculatedPrice * discountPercent) / 100);
+    finalDiscountPercent = discountPercent;
+    // Only update amount field, don't trigger recalculation
+    discountAmountInput.value = finalDiscount;
+} else if (activeId === 'prod-discount-amount' && discountAmount > 0) {
+    // User is typing in amount field
+    finalDiscount = discountAmount;
+    finalDiscountPercent = calculatedPrice > 0 ? ((discountAmount / calculatedPrice) * 100) : 0;
+    // Only update percent field, don't trigger recalculation
+    discountPercentInput.value = finalDiscountPercent.toFixed(2);
+} else {
+    // Not actively editing - use whatever values are present
+    if (discountPercent > 0) {
+        finalDiscount = Math.round((calculatedPrice * discountPercent) / 100);
+        finalDiscountPercent = discountPercent;
+    } else if (discountAmount > 0) {
+        finalDiscount = discountAmount;
+        finalDiscountPercent = calculatedPrice > 0 ? ((discountAmount / calculatedPrice) * 100) : 0;
+    }
+}
 
-            const finalPrice = calculatedPrice - finalDiscount;
+const finalPrice = calculatedPrice - finalDiscount;
 
-            // Update discount display
-            const discountDisplayEl = document.getElementById('dynamic-discount-display');
-            if (discountDisplayEl) {
-                discountDisplayEl.textContent = finalDiscount > 0
-                    ? '₹' + finalDiscount.toLocaleString() + ' (' + finalDiscountPercent.toFixed(2) + '%)'
-                    : '₹0';
-            }
-            // ===== END DISCOUNT CALCULATION =====
+// Update discount display
+const discountDisplayEl = document.getElementById('dynamic-discount-display');
+if (discountDisplayEl) {
+    discountDisplayEl.textContent = finalDiscount > 0 
+        ? '₹' + finalDiscount.toLocaleString() + ' (' + finalDiscountPercent.toFixed(2) + '%)'
+        : '₹0';
+}
+// ===== END NEW =====
+    // ===== END NEW =====
 
-            if (makingTotalEl) makingTotalEl.textContent = '₹' + totalMakingCharges.toLocaleString();
-            if (finalPriceEl) finalPriceEl.textContent = '₹' + Math.round(finalPrice).toLocaleString();
+    if (makingTotalEl) makingTotalEl.textContent = '₹' + totalMakingCharges.toLocaleString();
+    if (finalPriceEl) finalPriceEl.textContent = '₹' + Math.round(finalPrice).toLocaleString();
 
-            // Store into hidden fields for form submission
-            const dynOrigEl = document.getElementById('prod-original-price-dynamic');
-            const dynOffEl = document.getElementById('prod-offer-price-dynamic');
-            if (dynOrigEl) dynOrigEl.value = Math.round(calculatedPrice); // Original before discount
-            if (dynOffEl) dynOffEl.value = Math.round(finalPrice); // Final after discount
-            // Also keep visible fields in sync (they are hidden when dynamic is ON)
-            const origEl = document.getElementById('prod-original-price');
-            const offEl = document.getElementById('prod-offer-price');
-            if (origEl) origEl.value = Math.round(calculatedPrice);
-            if (offEl) offEl.value = Math.round(finalPrice);
-        };
-
+    // Store into hidden fields for form submission
+    const dynOrigEl = document.getElementById('prod-original-price-dynamic');
+    const dynOffEl = document.getElementById('prod-offer-price-dynamic');
+    if (dynOrigEl) dynOrigEl.value = Math.round(calculatedPrice); // Original before discount
+    if (dynOffEl) dynOffEl.value = Math.round(finalPrice); // Final after discount
+    // Also keep visible fields in sync (they are hidden when dynamic is ON)
+    const origEl = document.getElementById('prod-original-price');
+    const offEl = document.getElementById('prod-offer-price');
+    if (origEl) origEl.value = Math.round(calculatedPrice);
+    if (offEl) offEl.value = Math.round(finalPrice);
+};
         // ---- EDIT FORM: toggle dynamic pricing ----
-        window.toggleEditDynamicPricing = function () {
-            const checkbox = document.getElementById('edit-dynamic-pricing');
-            if (!checkbox) return;
-            const isDynamic = checkbox.checked;
-            const manualSection = document.getElementById('edit-manual-price-section');
-            const dynamicDisplay = document.getElementById('edit-dynamic-price-display');
+window.toggleEditDynamicPricing = function () {
+    const checkbox = document.getElementById('edit-dynamic-pricing');
+    if (!checkbox) return;
+    const isDynamic = checkbox.checked;
+    const manualSection = document.getElementById('edit-manual-price-section');
+    const dynamicDisplay = document.getElementById('edit-dynamic-price-display');
 
-            if (isDynamic) {
-                if (manualSection) manualSection.style.display = 'none';
-                if (dynamicDisplay) dynamicDisplay.style.display = 'block';
+    if (isDynamic) {
+        if (manualSection) manualSection.style.display = 'none';
+        if (dynamicDisplay) dynamicDisplay.style.display = 'block';
 
-                // Calculate and display total making charges first
-                calculateEditTotalMakingCharges();
+        // Calculate and show live price
+        const weight = parseFloat(document.getElementById('edit-weight').value) || 0;
+        const makingCharges = parseFloat(document.getElementById('edit-making-charges').value) || 0;
+        const metalType = document.getElementById('edit-metal-type').value;
+        const carat = document.getElementById('edit-carat').value;
+        const totalMakingCharges = makingCharges * weight;
 
-                // Calculate and show live price
-                const weight = parseFloat(document.getElementById('edit-weight').value) || 0;
-                const makingCharges = parseFloat(document.getElementById('edit-making-charges').value) || 0;
-                const metalType = document.getElementById('edit-metal-type').value;
-                const carat = document.getElementById('edit-carat').value;
-                const totalMakingCharges = makingCharges * weight;
+        const marketRateEl = document.getElementById('edit-dynamic-market-rate');
+        const makingTotalEl = document.getElementById('edit-dynamic-making-total');
+        const finalPriceEl = document.getElementById('edit-dynamic-final-price');
+        const discountDisplayEl = document.getElementById('edit-dynamic-discount-display');
 
-                const marketRateEl = document.getElementById('edit-dynamic-market-rate');
-                const makingTotalEl = document.getElementById('edit-dynamic-making-total');
-                const finalPriceEl = document.getElementById('edit-dynamic-final-price');
-                const discountDisplayEl = document.getElementById('edit-dynamic-discount-display');
+        let ratePerGram = 0;
+        if (metalType === 'gold' && carat) {
+            ratePerGram = carat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
+            if (marketRateEl) marketRateEl.textContent = ratePerGram ? '₹' + ratePerGram.toLocaleString() + '/gm (' + carat + ')' : 'Price not loaded';
+        } else if (metalType === 'silver') {
+            ratePerGram = window.latestPrices.silver / 10;
+            if (marketRateEl) marketRateEl.textContent = ratePerGram ? '₹' + ratePerGram.toFixed(2) + '/gm (Silver)' : 'Price not loaded';
+        } else {
+            if (marketRateEl) marketRateEl.textContent = 'N/A';
+        }
 
-                let ratePerGram = 0;
-                if (metalType === 'gold' && carat) {
-                    ratePerGram = carat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
-                    if (marketRateEl) marketRateEl.textContent = ratePerGram ? '₹' + ratePerGram.toLocaleString() + '/gm (' + carat + ')' : 'Price not loaded';
-                } else if (metalType === 'silver') {
-                    ratePerGram = window.latestPrices.silver / 10;
-                    if (marketRateEl) marketRateEl.textContent = ratePerGram ? '₹' + ratePerGram.toFixed(2) + '/gm (Silver)' : 'Price not loaded';
-                } else {
-                    if (marketRateEl) marketRateEl.textContent = 'N/A';
-                }
+        const calculatedBasePrice = Math.round((weight * ratePerGram) + totalMakingCharges);
+        
+        // Get discount values
+      // Get discount values
+const discountPercentInput = document.getElementById('edit-discount-percent');
+const discountAmountInput = document.getElementById('edit-discount-amount');
+const discountPercent = parseFloat(discountPercentInput.value) || 0;
+const discountAmount = parseFloat(discountAmountInput.value) || 0;
 
-                const calculatedBasePrice = Math.round((weight * ratePerGram) + totalMakingCharges);
+let finalDiscount = 0;
+let finalDiscountPercent = 0;
 
-                // Get discount values
-                const discountPercentInput = document.getElementById('edit-discount-percent');
-                const discountAmountInput = document.getElementById('edit-discount-amount');
-                const discountPercent = parseFloat(discountPercentInput.value) || 0;
-                const discountAmount = parseFloat(discountAmountInput.value) || 0;
+// Prioritize amount if both are present, otherwise use whichever is set
+if (discountAmount > 0) {
+    finalDiscount = discountAmount;
+    finalDiscountPercent = calculatedBasePrice > 0 ? ((discountAmount / calculatedBasePrice) * 100) : 0;
+} else if (discountPercent > 0) {
+    finalDiscount = Math.round((calculatedBasePrice * discountPercent) / 100);
+    finalDiscountPercent = discountPercent;
+}
+        
+        const finalPrice = calculatedBasePrice - finalDiscount;
+        
+        if (makingTotalEl) makingTotalEl.textContent = '₹' + totalMakingCharges.toLocaleString();
+        if (discountDisplayEl) {
+            discountDisplayEl.textContent = finalDiscount > 0 
+                ? '₹' + finalDiscount.toLocaleString() + ' (' + ((finalDiscount / calculatedBasePrice) * 100).toFixed(2) + '%)'
+                : '₹0';
+        }
+        if (finalPriceEl) finalPriceEl.textContent = '₹' + finalPrice.toLocaleString();
 
-                let finalDiscount = 0;
-                let finalDiscountPercent = 0;
-
-                // Prioritize amount if both are present, otherwise use whichever is set
-                if (discountAmount > 0) {
-                    finalDiscount = discountAmount;
-                    finalDiscountPercent = calculatedBasePrice > 0 ? ((discountAmount / calculatedBasePrice) * 100) : 0;
-                } else if (discountPercent > 0) {
-                    finalDiscount = Math.round((calculatedBasePrice * discountPercent) / 100);
-                    finalDiscountPercent = discountPercent;
-                }
-
-                const finalPrice = calculatedBasePrice - finalDiscount;
-
-                if (makingTotalEl) makingTotalEl.textContent = '₹' + totalMakingCharges.toLocaleString();
-                if (discountDisplayEl) {
-                    discountDisplayEl.textContent = finalDiscount > 0
-                        ? '₹' + finalDiscount.toLocaleString() + ' (' + finalDiscountPercent.toFixed(2) + '%)'
-                        : '₹0';
-                }
-                if (finalPriceEl) finalPriceEl.textContent = '₹' + finalPrice.toLocaleString();
-
-                // Store in price fields for save handler
-                const origEl = document.getElementById('edit-original-price');
-                const offEl = document.getElementById('edit-offer-price');
-                if (origEl) origEl.value = calculatedBasePrice;
-                if (offEl) offEl.value = finalPrice;
-            } else {
-                if (manualSection) manualSection.style.display = 'block';
-                if (dynamicDisplay) dynamicDisplay.style.display = 'none';
-            }
-        };
+        // Store in price fields for save handler
+        const origEl = document.getElementById('edit-original-price');
+        const offEl = document.getElementById('edit-offer-price');
+        if (origEl) origEl.value = calculatedBasePrice;
+        if (offEl) offEl.value = finalPrice;
+    } else {
+        if (manualSection) manualSection.style.display = 'block';
+        if (dynamicDisplay) dynamicDisplay.style.display = 'none';
+    }
+};
     </script>
 
     <!-- ===== FIREBASE MODULE SCRIPT ===== -->
     <script type="module">
-        // ---- Direct Firebase Modular SDK imports ----
+        // ---- Direct Firebase Modular SDK imports (no firebase-config.js dependency) ----
         import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import {
             getAuth,
@@ -1960,14 +1960,10 @@
         window.autoFillEditMakingCharges = () => {
             const category = document.getElementById('edit-category').value;
             const currentValue = document.getElementById('edit-making-charges').value;
-
-            // Only auto-fill if field is empty
             if (category && defaultMakingCharges[category] !== undefined && !currentValue) {
                 document.getElementById('edit-making-charges').value = defaultMakingCharges[category];
+                calculateEditTotalMakingCharges();
             }
-
-            // Always calculate total making charges (even if value already exists)
-            calculateEditTotalMakingCharges();
         };
 
         window.calculateTotalMakingCharges = () => {
@@ -2017,8 +2013,15 @@
             });
 
             // Carat change triggers recalc on add form
-            const caratSelect = document.getElementById('prod-carat');
-            if (caratSelect) caratSelect.addEventListener('change', calculateAutoPrice);
+           // Carat change triggers recalc on add form
+const caratSelect = document.getElementById('prod-carat');
+if (caratSelect) caratSelect.addEventListener('change', calculateAutoPrice);
+
+// Add event listeners for discount fields to trigger dynamic price recalculation
+const discountPercentInput = document.getElementById('prod-discount-percent');
+const discountAmountInput = document.getElementById('prod-discount-amount');
+if (discountPercentInput) discountPercentInput.addEventListener('input', calculateAutoPrice);
+if (discountAmountInput) discountAmountInput.addEventListener('input', calculateAutoPrice);
         });
 
         // ============================================
@@ -2184,30 +2187,30 @@
 
             let originalPrice, offerPrice, discountPercent, discountAmount;
 
-            if (isDynamicPricing) {
-                // Calculate from live prices
-                let ratePerGram = 0;
-                if (metalType === 'gold' && carat) {
-                    ratePerGram = carat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
-                } else if (metalType === 'silver') {
-                    ratePerGram = window.latestPrices.silver / 10;
-                }
-                const calculatedBasePrice = Math.round((weight * ratePerGram) + totalMakingCharges);
-
-                // Get discount values
-                discountPercent = parseFloat(document.getElementById('prod-discount-percent').value) || 0;
-                discountAmount = parseFloat(document.getElementById('prod-discount-amount').value) || 0;
-
-                // Calculate final discount amount if percentage is provided
-                if (discountPercent > 0 && discountAmount === 0) {
-                    discountAmount = Math.round((calculatedBasePrice * discountPercent) / 100);
-                } else if (discountAmount > 0 && discountPercent === 0) {
-                    discountPercent = calculatedBasePrice > 0 ? ((discountAmount / calculatedBasePrice) * 100) : 0;
-                }
-
-                originalPrice = calculatedBasePrice;
-                offerPrice = calculatedBasePrice - discountAmount;
-            } else {
+           if (isDynamicPricing) {
+    // Calculate from live prices
+    let ratePerGram = 0;
+    if (metalType === 'gold' && carat) {
+        ratePerGram = carat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
+    } else if (metalType === 'silver') {
+        ratePerGram = window.latestPrices.silver / 10;
+    }
+    const calculatedBasePrice = Math.round((weight * ratePerGram) + totalMakingCharges);
+    
+    // Get discount values
+    discountPercent = parseFloat(document.getElementById('prod-discount-percent').value) || 0;
+    discountAmount = parseFloat(document.getElementById('prod-discount-amount').value) || 0;
+    
+    // Calculate final discount amount if percentage is provided
+    if (discountPercent > 0 && discountAmount === 0) {
+        discountAmount = Math.round((calculatedBasePrice * discountPercent) / 100);
+    } else if (discountAmount > 0 && discountPercent === 0) {
+        discountPercent = calculatedBasePrice > 0 ? ((discountAmount / calculatedBasePrice) * 100) : 0;
+    }
+    
+    originalPrice = calculatedBasePrice;
+    offerPrice = calculatedBasePrice - discountAmount;
+} else {
                 originalPrice = parseFloat(document.getElementById('prod-original-price').value) || 0;
                 offerPrice = parseFloat(document.getElementById('prod-offer-price').value) || originalPrice;
                 discountPercent = parseFloat(document.getElementById('prod-discount-percent').value) || 0;
@@ -2313,24 +2316,10 @@
                                 ratePerGram = window.latestPrices.silver / 10;
                             }
                             if (ratePerGram > 0) {
-                                const mc = (productData.makingCharges || 0) * productData.weight;
-                                const basePrice = Math.round((productData.weight * ratePerGram) + mc);
-
-                                // Get discount amount
-                                let discountAmount = productData.discountAmount || 0;
-
-                                // If discount percentage is given but amount is not, calculate it
-                                if (!discountAmount && productData.discountPercent > 0) {
-                                    discountAmount = Math.round((basePrice * productData.discountPercent) / 100);
-                                }
-
-                                // Store both base price (before discount) and offer price (after discount)
-                                productData.calculatedBasePrice = basePrice;
-                                productData.calculatedOfferPrice = basePrice - discountAmount;
-
-                                // Store the actual discount being applied
-                                productData.actualDiscountAmount = discountAmount;
-                            }
+                           const mc = (productData.makingCharges || 0) * productData.weight;
+                           const basePrice = Math.round((productData.weight * ratePerGram) + mc);
+                           const discount = productData.discountAmount || 0;
+                         productData.calculatedOfferPrice = basePrice - discount;}
                         }
 
                         allProducts.push(productData);
@@ -2398,23 +2387,12 @@
                 let displayPrice = product.offerPrice || product.price || 0;
                 let originalPriceDisplay = product.originalPrice || displayPrice;
 
-                if (product.dynamicPricing !== false && product.calculatedOfferPrice !== undefined) {
-                    // Dynamic pricing is enabled
+                if (product.dynamicPricing !== false && product.calculatedOfferPrice) {
                     displayPrice = product.calculatedOfferPrice;
-
-                    // Show original price (before discount) if there's a discount
-                    if (product.calculatedBasePrice && product.calculatedBasePrice > product.calculatedOfferPrice) {
-                        originalPriceDisplay = product.calculatedBasePrice;
-                    } else {
-                        originalPriceDisplay = product.calculatedOfferPrice;
-                    }
+                    originalPriceDisplay = product.calculatedOfferPrice;
                 }
 
                 const hasDiscount = originalPriceDisplay > displayPrice;
-                const discountPercentage = hasDiscount && originalPriceDisplay > 0
-                    ? ((originalPriceDisplay - displayPrice) / originalPriceDisplay) * 100
-                    : 0;
-                const showDiscount = hasDiscount && discountPercentage >= 0.01; // Show if at least 0.01%
 
                 return `
                 <div class="product-card ${product.inStock ? '' : 'out-of-stock'}">
@@ -2425,7 +2403,7 @@
                         <span class="stock-badge ${product.inStock ? 'in-stock' : 'out-of-stock'}">
                             ${product.inStock ? '✓ In Stock' : '✕ Out of Stock'}
                         </span>
-                        ${showDiscount ? `<div class="discount-badge">-${discountPercentage.toFixed(2)}%</div>` : ''}
+                        ${(hasDiscount && originalPriceDisplay > 0) ? `<div class="discount-badge">-${Math.round(((originalPriceDisplay - displayPrice) / originalPriceDisplay) * 100)}%</div>` : ''}
                     </div>
 
                     <div class="card-info-wrapper">
@@ -2442,9 +2420,9 @@
                         <div class="card-price-section">
                             <div class="price-row">
                                 <span class="current-price">₹${displayPrice.toLocaleString()}</span>
-                                ${showDiscount ? `<span class="original-price">₹${originalPriceDisplay.toLocaleString()}</span>` : ''}
+                                ${hasDiscount ? `<span class="original-price">₹${originalPriceDisplay.toLocaleString()}</span>` : ''}
                             </div>
-                            ${showDiscount ? `<span class="savings">You save ₹${(originalPriceDisplay - displayPrice).toLocaleString()}</span>` : ''}
+                            ${hasDiscount ? `<span class="savings">You save ₹${(originalPriceDisplay - displayPrice).toLocaleString()}</span>` : ''}
                             ${product.totalMakingCharges ? `<span style="font-size: 11px; color: #6b7280; margin-top: 4px; display: block;">Making Charges: ₹${product.totalMakingCharges.toLocaleString()}</span>` : ''}
                         </div>
 
@@ -2484,7 +2462,6 @@
                 `;
             }).join('');
         }
-
         // ============================================
         // TOGGLE STOCK / ONLINE / DELETE
         // ============================================
@@ -2528,30 +2505,18 @@
 
             editingProductData = { ...product, imagesToDelete: [] };
             editingProductImages = [];
-
+             
             // Populate all fields
             document.getElementById('edit-product-id').value = productId;
-            
-            // Populate category first (needed for auto-fill)
             document.getElementById('edit-category').value = product.category || '';
-
-            // Handle making charges - auto-fill if empty, otherwise use existing
-            const makingChargesInput = document.getElementById('edit-making-charges');
-            if (product.makingCharges && product.makingCharges > 0) {
-                // Product has making charges - use them
-                makingChargesInput.value = product.makingCharges;
-            } else {
-                // No making charges - auto-fill from defaults
-                makingChargesInput.value = '';
-                autoFillEditMakingCharges(); // This will fill based on category
-            }
-
             document.getElementById('edit-name').value = product.name || '';
             document.getElementById('edit-weight').value = product.weight || '';
             document.getElementById('edit-quantity').value = product.stockQuantity || 1;
             document.getElementById('edit-instock').checked = product.inStock !== false;
             document.getElementById('edit-online-enabled').checked = product.onlineEnabled !== false;
             document.getElementById('edit-safety').checked = product.safetyEnabled || false;
+
+            document.getElementById('edit-making-charges').value = product.makingCharges || 0;
             document.getElementById('edit-trending').checked = product.isTrending || false;
             document.getElementById('edit-metal-type').value = product.metalType || '';
             document.getElementById('edit-carat').value = product.carat || '';
@@ -2563,6 +2528,12 @@
             const isDynamic = product.dynamicPricing !== false;
             document.getElementById('edit-dynamic-pricing').checked = isDynamic;
 
+            // Show total making charges
+            if (product.makingCharges && product.weight) {
+                document.getElementById('edit-total-making-display').style.display = 'block';
+                document.getElementById('edit-total-making').textContent = '₹' + (product.makingCharges * product.weight).toLocaleString();
+            }
+
             // Populate manual price fields (used when dynamic is OFF)
             document.getElementById('edit-original-price').value = product.originalPrice || product.price || 0;
             document.getElementById('edit-offer-price').value = product.offerPrice || product.price || 0;
@@ -2571,9 +2542,6 @@
 
             // Apply dynamic pricing toggle (shows/hides sections and recalculates)
             toggleEditDynamicPricing();
-
-            // IMPORTANT: Force calculate total making charges after all fields are populated
-            calculateEditTotalMakingCharges();
 
             // Load images
             if (product.images && product.images.length > 0) {
@@ -2676,29 +2644,29 @@
 
                 let finalOriginalPrice, finalOfferPrice, finalDiscountPercent, finalDiscountAmount;
 
-                if (isDynamicPricing && weight && editMetalType) {
-                    let ratePerGram = 0;
-                    if (editMetalType === 'gold' && editCarat) {
-                        ratePerGram = editCarat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
-                    } else if (editMetalType === 'silver') {
-                        ratePerGram = window.latestPrices.silver / 10;
-                    }
-                    const calculatedBasePrice = Math.round((weight * ratePerGram) + (makingCharges * weight));
-
-                    // Get discount values
-                    finalDiscountPercent = parseFloat(document.getElementById('edit-discount-percent').value) || 0;
-                    finalDiscountAmount = parseFloat(document.getElementById('edit-discount-amount').value) || 0;
-
-                    // Calculate final discount
-                    if (finalDiscountPercent > 0 && finalDiscountAmount === 0) {
-                        finalDiscountAmount = Math.round((calculatedBasePrice * finalDiscountPercent) / 100);
-                    } else if (finalDiscountAmount > 0 && finalDiscountPercent === 0) {
-                        finalDiscountPercent = calculatedBasePrice > 0 ? ((finalDiscountAmount / calculatedBasePrice) * 100) : 0;
-                    }
-
-                    finalOriginalPrice = calculatedBasePrice;
-                    finalOfferPrice = calculatedBasePrice - finalDiscountAmount;
-                } else {
+             if (isDynamicPricing && weight && editMetalType) {
+    let ratePerGram = 0;
+    if (editMetalType === 'gold' && editCarat) {
+        ratePerGram = editCarat === '24CT' ? window.latestPrices.gold : window.latestPrices.skjg;
+    } else if (editMetalType === 'silver') {
+        ratePerGram = window.latestPrices.silver / 10;
+    }
+    const calculatedBasePrice = Math.round((weight * ratePerGram) + (makingCharges * weight));
+    
+    // Get discount values
+    finalDiscountPercent = parseFloat(document.getElementById('edit-discount-percent').value) || 0;
+    finalDiscountAmount = parseFloat(document.getElementById('edit-discount-amount').value) || 0;
+    
+    // Calculate final discount
+    if (finalDiscountPercent > 0 && finalDiscountAmount === 0) {
+        finalDiscountAmount = Math.round((calculatedBasePrice * finalDiscountPercent) / 100);
+    } else if (finalDiscountAmount > 0 && finalDiscountPercent === 0) {
+        finalDiscountPercent = calculatedBasePrice > 0 ? ((finalDiscountAmount / calculatedBasePrice) * 100) : 0;
+    }
+    
+    finalOriginalPrice = calculatedBasePrice;
+    finalOfferPrice = calculatedBasePrice - finalDiscountAmount;
+} else {
                     finalOriginalPrice = parseFloat(document.getElementById('edit-original-price').value) || 0;
                     finalOfferPrice = parseFloat(document.getElementById('edit-offer-price').value) || finalOriginalPrice;
                     finalDiscountPercent = parseFloat(document.getElementById('edit-discount-percent').value) || 0;
@@ -2766,32 +2734,16 @@
                 msgDiv.className = `feedback-message show ${type}`;
                 msgDiv.textContent = message;
                 element.insertAdjacentElement('afterbegin', msgDiv);
-                setTimeout() = msgDiv.remove(), 
-                                setTimeout(() => msgDiv.remove(), 3000);
+                setTimeout(() => msgDiv.remove(), 5000);
             } else {
                 element.textContent = message;
                 element.className = `feedback-message show ${type}`;
-                setTimeout(() => {
-                    element.classList.remove('show', 'success', 'error');
-                    element.textContent = '';
-                }, 3000);
+                setTimeout(() => { element.classList.remove('show'); }, 5000);
             }
         }
-
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        
-        // Expose functions to window for inline event handlers
-        window.calculateEditTotalMakingCharges = calculateEditTotalMakingCharges;
-        window.autoFillEditMakingCharges = autoFillEditMakingCharges;
-        window.handleEditMetalTypeChange = handleEditMetalTypeChange;
-        window.toggleEditDynamicPricing = toggleEditDynamicPricing;
-        window.calculatePrices = calculatePrices;
-        window.showMessage = showMessage;
-
     </script>
- <!-- GLOBAL FUNCTION BRIDGE -->
+
+    <!-- GLOBAL FUNCTION BRIDGE -->
     <script>
         window.logout = async function () {
             try {
@@ -2803,6 +2755,6 @@
             }
         };
     </script>
-    
 </body>
+
 </html>
