@@ -787,11 +787,65 @@
     <!-- Razorpay Script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <!-- Firebase Script -->
-    <script type="module">
-        // 🔗 IMPORT FROM firebase-config.js
-        import { db } from './firebase-config.js';
-        import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // Firebase compat initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyATmseHSU3qimkm6pSCJ_xA1EL3_KiHtXs",
+            authDomain: "skj-jewelry-store.firebaseapp.com",
+            projectId: "skj-jewelry-store",
+            storageBucket: "skj-jewelry-store.firebasestorage.app",
+            messagingSenderId: "531463279637",
+            appId: "1:531463279637:web:2ab8aaaa80211045252a1c",
+            measurementId: "G-0S99YE5NR1"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Price cache for dynamic pricing
+        let shopCachedPrices = { gold: 6400, skjg: 6200, silver: 750 };
+
+        // Real-time price listener
+        db.collection('prices').doc('current').onSnapshot((docSnap) => {
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                shopCachedPrices = {
+                    gold: data.goldMarketPrice || 0,
+                    skjg: data.goldSKJPrice || 0,
+                    silver: data.silverMarketPrice || 0
+                };
+                console.log('✅ Shop prices updated:', shopCachedPrices);
+                // Re-render products with new prices
+                if (allProducts.length > 0) {
+                    applyFilters();
+                }
+            }
+        }, (err) => { console.error('Shop price listener error:', err); });
+
+        // Dynamic price calculation
+        function calcShopPrice(product) {
+            let price = product.offerPrice || product.price || 0;
+            if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
+                const rate = product.carat === '24CT' ? shopCachedPrices.gold : (shopCachedPrices.skjg || 6200);
+                const making = (product.makingCharges || 0) * parseFloat(product.weight);
+                const basePrice = Math.round(parseFloat(product.weight) * rate + making);
+                let discountAmt = product.discountAmount || 0;
+                if (!discountAmt && product.discountPercent > 0) discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                price = basePrice - discountAmt;
+            } else if (product.metalType === 'silver' && product.weight && product.dynamicPricing !== false) {
+                const rate = (shopCachedPrices.silver || 750) / 10;
+                const making = (product.makingCharges || 0) * parseFloat(product.weight);
+                const basePrice = Math.round(parseFloat(product.weight) * rate + making);
+                let discountAmt = product.discountAmount || 0;
+                if (!discountAmt && product.discountPercent > 0) discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                price = basePrice - discountAmt;
+            }
+            return price;
+        }
 
         // Global variables
         let allProducts = [];
@@ -804,9 +858,7 @@
         // LOAD PRODUCTS FROM FIREBASE
         // ============================================
         function loadProducts() {
-            const q = query(collection(db, 'products'), where('isActive', '==', true));
-            
-            onSnapshot(q, (snapshot) => {
+            db.collection('products').where('isActive', '==', true).onSnapshot((snapshot) => {
                 allProducts = [];
                 snapshot.forEach((doc) => {
                     allProducts.push({ id: doc.id, ...doc.data() });
@@ -830,12 +882,13 @@
             }
 
             grid.innerHTML = filteredProducts.map(product => {
-                const mainImage = product.images && product.images[product.mainImageIndex || 0] 
+                const mainImage = product.images && product.images[product.mainImageIndex || 0]
                     ? product.images[product.mainImageIndex || 0]
                     : 'https://via.placeholder.com/280';
-                
+
                 const isOnlineAvailable = product.onlineEnabled !== false;
-                
+                const livePrice = calcShopPrice(product);
+
                 return `
                     <div class="product-card" onclick="openProductModal('${product.id}')">
                         <div class="product-image-container">
@@ -851,7 +904,7 @@
                             <div class="product-description">
                                 <span>${product.weight}g</span>
                             </div>
-                            <div class="product-price">₹${product.price.toLocaleString()}</div>
+                            <div class="product-price">₹${livePrice.toLocaleString()}</div>
                             <div class="product-actions">
                                 <button class="btn-view" onclick="event.stopPropagation(); openProductModal('${product.id}')">View</button>
                                 <button class="btn-cart" ${!product.inStock ? 'disabled' : ''} onclick="event.stopPropagation(); quickAddToCart('${product.id}')">
@@ -901,7 +954,7 @@
             // Populate modal
             document.getElementById('modal-category').textContent = product.category.toUpperCase();
             document.getElementById('modal-name').textContent = product.name;
-            document.getElementById('modal-price').textContent = `₹${product.price.toLocaleString()}`;
+            document.getElementById('modal-price').textContent = `₹${calcShopPrice(product).toLocaleString()}`;
             document.getElementById('modal-weight').textContent = `${product.weight}g`;
             document.getElementById('modal-category-full').textContent = product.category;
             document.getElementById('modal-availability').textContent = product.inStock ? 'In Stock' : 'Out of Stock';
@@ -995,7 +1048,7 @@
                 cart.push({
                     id: productId,
                     name: product.name,
-                    price: product.price,
+                    price: calcShopPrice(product),
                     quantity: quantity,
                     onlineEnabled: product.onlineEnabled
                 });
@@ -1216,7 +1269,7 @@
                     return product && product.onlineEnabled !== false;
                 });
 
-                await addDoc(collection(db, 'orders'), {
+                await db.collection('orders').add({
                     paymentId: paymentId,
                     razorpayOrderId: orderId,
                     signature: signature,
@@ -1227,8 +1280,8 @@
                     items: paidItems,
                     totalAmount: amount,
                     status: 'confirmed',
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 // Keep offline items in cart for WhatsApp inquiry

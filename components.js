@@ -380,7 +380,7 @@ window.panelLogin = async function() {
         // Sign in
         await firebase.auth().signInWithEmailAndPassword(email, password);
         
-        // Handle remember me
+        // Handle remember m
         if (rememberMe) {
             localStorage.setItem('skj_remembered_email', email);
         } else {
@@ -401,40 +401,88 @@ window.panelLogin = async function() {
     }
 };
 
-window.loadRegisterInPanel = async function() {
+window.loadRegisterInPanel = function() {
     const formDiv = document.getElementById('login-panel-form');
     const titleEl = document.getElementById('login-panel-title');
     if (!formDiv) return;
     if (titleEl) titleEl.textContent = 'Create Account';
-    
+
+    // Reset state
+    window._panelConfirmResult = null;
+    if (window._panelRecaptcha) { try { window._panelRecaptcha.clear(); } catch(e) {} window._panelRecaptcha = null; }
+
     formDiv.innerHTML = `
-        <p class="text-gray-600 mb-4">Join our family of valued customers.</p>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-            <input type="text" id="reg-name" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Enter your full name">
+        <div class="flex items-center justify-center gap-2 mb-5">
+            <div id="pdot-1" class="w-3 h-3 rounded-full bg-emerald-900"></div>
+            <div class="w-6 h-0.5 bg-gray-300"></div>
+            <div id="pdot-2" class="w-3 h-3 rounded-full bg-gray-300"></div>
+            <div class="w-6 h-0.5 bg-gray-300"></div>
+            <div id="pdot-3" class="w-3 h-3 rounded-full bg-gray-300"></div>
         </div>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-            <input type="email" id="reg-email" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Enter your email">
+
+        <!-- Step 1: Details -->
+        <div id="panel-reg-step1">
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" id="reg-name" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Enter your full name">
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" id="reg-email" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Enter your email">
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <div class="flex gap-2">
+                    <span class="flex items-center px-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 text-sm font-medium">+91</span>
+                    <input type="tel" id="reg-phone" maxlength="10" inputmode="numeric" class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="10-digit number">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="reg-password" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Min 6 characters">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <input type="password" id="reg-confirm" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Confirm your password">
+            </div>
+            <div id="panel-recaptcha-container"></div>
+            <div id="reg-error" class="hidden mb-3 p-3 bg-red-100 text-red-700 rounded-lg text-sm"></div>
+            <button onclick="panelStep1Submit()" id="panel-reg-btn1" class="w-full bg-emerald-950 text-white py-3 rounded-lg font-semibold hover:bg-emerald-800 transition mb-3">
+                Send OTP
+            </button>
+            <button onclick="loadLoginInPanel()" class="w-full text-center text-sm text-emerald-700 hover:underline">Already have an account? Sign In</button>
         </div>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-            <input type="tel" id="reg-phone" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="10-digit mobile number">
+
+        <!-- Step 2: OTP -->
+        <div id="panel-reg-step2" class="hidden">
+            <p class="text-gray-500 text-sm mb-1">OTP sent to <strong id="panel-reg-phone-display" class="text-emerald-700"></strong></p>
+            <p class="text-gray-400 text-xs mb-4">Enter the 6-digit code below</p>
+            <input type="text" id="reg-otp" maxlength="6" inputmode="numeric"
+                class="w-full border border-gray-300 rounded-lg px-4 py-4 text-center text-2xl tracking-widest focus:outline-none focus:border-emerald-950 mb-4"
+                placeholder="------">
+            <div id="reg-otp-error" class="hidden mb-3 p-3 bg-red-100 text-red-700 rounded-lg text-sm"></div>
+            <button onclick="panelVerifyOtp()" id="panel-verify-btn" class="w-full bg-emerald-950 text-white py-3 rounded-lg font-semibold hover:bg-emerald-800 transition mb-2">
+                Verify OTP
+            </button>
+            <button onclick="panelResendOtp()" id="panel-resend-btn" class="w-full border border-emerald-950 text-emerald-950 py-3 rounded-lg font-semibold hover:bg-gray-50 transition text-sm mb-2">
+                Resend OTP
+            </button>
+            <button onclick="loadRegisterInPanel()" class="w-full text-center text-sm text-gray-400 hover:text-emerald-700">← Back</button>
         </div>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <input type="password" id="reg-password" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Create a password (min 6 chars)">
+
+        <!-- Step 3: Check email -->
+        <div id="panel-reg-step3" class="hidden text-center py-4">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-envelope-open-text text-2xl text-green-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2 text-gray-800">Check Your Email</h3>
+            <p class="text-gray-500 text-sm mb-1">Verification link sent to</p>
+            <p id="panel-reg-email-display" class="font-semibold text-emerald-700 text-sm mb-4"></p>
+            <p class="text-gray-400 text-xs mb-5">Click the link in the email, then sign in.</p>
+            <button onclick="loadLoginInPanel()" class="w-full bg-emerald-950 text-white py-3 rounded-lg font-semibold hover:bg-emerald-800 transition">
+                Go to Sign In
+            </button>
         </div>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-            <input type="password" id="reg-confirm" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-950" placeholder="Confirm your password">
-        </div>
-        <div id="reg-error" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm"></div>
-        <div id="reg-success" class="hidden mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm"></div>
-        <button onclick="panelRegister()" class="w-full bg-emerald-950 text-white py-3 rounded-lg font-semibold hover:bg-emerald-800 transition mb-4">
-            <span>Create Account</span>
-        </button>
-        <button onclick="loadLoginInPanel()" class="w-full text-center text-sm text-emerald-700 hover:underline">Already have an account? Sign In</button>
     `;
 };
 
@@ -462,55 +510,113 @@ window.loadLoginInPanel = function() {
     document.body.style.overflow = 'hidden';
 };
 
-window.panelRegister = async function() {
+// Step 1: Validate details and send phone OTP
+window.panelStep1Submit = async function() {
     const name = document.getElementById('reg-name')?.value?.trim();
     const email = document.getElementById('reg-email')?.value?.trim();
     const phone = document.getElementById('reg-phone')?.value?.trim();
     const password = document.getElementById('reg-password')?.value;
     const confirm = document.getElementById('reg-confirm')?.value;
     const errEl = document.getElementById('reg-error');
-    const successEl = document.getElementById('reg-success');
-    
     if (errEl) errEl.classList.add('hidden');
-    
-    if (!name || !email || !phone || !password) {
-        if (errEl) { errEl.textContent = 'Please fill in all fields.'; errEl.classList.remove('hidden'); }
-        return;
-    }
-    if (password !== confirm) {
-        if (errEl) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); }
-        return;
-    }
-    if (password.length < 6) {
-        if (errEl) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.remove('hidden'); }
-        return;
-    }
-    if (!/^\d{10}$/.test(phone)) {
-        if (errEl) { errEl.textContent = 'Please enter a valid 10-digit phone number.'; errEl.classList.remove('hidden'); }
-        return;
-    }
-    
-    const btn = document.querySelector('#login-panel-form button[onclick="panelRegister()"]');
-    if (btn) { btn.disabled = true; btn.textContent = 'Creating account...'; }
-    
+
+    if (!name) { errEl.textContent = 'Please enter your full name.'; errEl.classList.remove('hidden'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email.'; errEl.classList.remove('hidden'); return; }
+    if (!/^\d{10}$/.test(phone)) { errEl.textContent = 'Please enter a valid 10-digit phone number.'; errEl.classList.remove('hidden'); return; }
+    if (!password || password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.remove('hidden'); return; }
+    if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
+
+    window._panelRegData = { name, email, phone, password };
+
+    const btn = document.getElementById('panel-reg-btn1');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending OTP...'; }
+
     try {
+        if (window._panelRecaptcha) { try { window._panelRecaptcha.clear(); } catch(e) {} }
+        window._panelRecaptcha = new firebase.auth.RecaptchaVerifier('panel-recaptcha-container', { size: 'invisible' });
+        window._panelConfirmResult = await firebase.auth().signInWithPhoneNumber('+91' + phone, window._panelRecaptcha);
+
+        document.getElementById('panel-reg-step1').classList.add('hidden');
+        document.getElementById('panel-reg-step2').classList.remove('hidden');
+        document.getElementById('panel-reg-phone-display').textContent = '+91 ' + phone;
+        const dot2 = document.getElementById('pdot-2');
+        if (dot2) dot2.className = 'w-3 h-3 rounded-full bg-emerald-900';
+    } catch(err) {
+        let msg = 'Failed to send OTP. Please try again.';
+        if (err.code === 'auth/invalid-phone-number') msg = 'Invalid phone number.';
+        else if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
+        if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Send OTP'; }
+    }
+};
+
+// Step 2: Verify OTP → create account → send email verification → sign out
+window.panelVerifyOtp = async function() {
+    const otp = document.getElementById('reg-otp')?.value?.trim();
+    const errEl = document.getElementById('reg-otp-error');
+    if (errEl) errEl.classList.add('hidden');
+
+    if (!otp || otp.length !== 6) {
+        errEl.textContent = 'Please enter the 6-digit OTP.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    const btn = document.getElementById('panel-verify-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Verifying...'; }
+
+    try {
+        await window._panelConfirmResult.confirm(otp);
+        await firebase.auth().signOut(); // end phone auth session
+
+        const { name, email, phone, password } = window._panelRegData;
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
         await user.updateProfile({ displayName: name });
+        await user.sendEmailVerification();
         await firebase.firestore().collection('users').doc(user.uid).set({
             uid: user.uid, email, displayName: name, phone,
-            role: 'customer', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            role: 'customer', phoneVerified: true, emailVerified: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        if (successEl) { successEl.textContent = 'Account created! Signing you in...'; successEl.classList.remove('hidden'); }
-        setTimeout(() => updateLoginPanelUI(user), 1500);
-    } catch(e) {
-        const msg = e.code === 'auth/email-already-in-use' ? 'An account with this email already exists.'
-                  : e.code === 'auth/invalid-email' ? 'Invalid email address.'
-                  : e.message;
+        await firebase.auth().signOut(); // must verify email before logging in
+
+        document.getElementById('panel-reg-step2').classList.add('hidden');
+        document.getElementById('panel-reg-step3').classList.remove('hidden');
+        document.getElementById('panel-reg-email-display').textContent = email;
+        const dot3 = document.getElementById('pdot-3');
+        if (dot3) dot3.className = 'w-3 h-3 rounded-full bg-emerald-900';
+    } catch(err) {
+        let msg = 'Verification failed. Please try again.';
+        if (err.code === 'auth/invalid-verification-code') msg = 'Incorrect OTP. Please check and retry.';
+        else if (err.code === 'auth/code-expired') msg = 'OTP expired. Please resend.';
+        else if (err.code === 'auth/email-already-in-use') msg = 'Email already registered.';
         if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
-        if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Verify OTP'; }
     }
 };
+
+// Resend OTP
+window.panelResendOtp = async function() {
+    const btn = document.getElementById('panel-resend-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+    const errEl = document.getElementById('reg-otp-error');
+    try {
+        if (window._panelRecaptcha) { try { window._panelRecaptcha.clear(); } catch(e) {} }
+        window._panelRecaptcha = new firebase.auth.RecaptchaVerifier('panel-recaptcha-container', { size: 'invisible' });
+        window._panelConfirmResult = await firebase.auth().signInWithPhoneNumber('+91' + window._panelRegData.phone, window._panelRecaptcha);
+        if (errEl) { errEl.textContent = 'OTP resent! Check your phone.'; errEl.className = 'mb-3 p-3 bg-green-100 text-green-700 rounded-lg text-sm'; setTimeout(() => errEl.classList.add('hidden'), 3000); }
+    } catch(e) {
+        if (errEl) { errEl.textContent = 'Failed to resend OTP.'; errEl.classList.remove('hidden'); }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Resend OTP'; }
+    }
+};
+
+// Legacy alias kept for any old code references
+window.panelRegister = window.panelStep1Submit;
 
 
 window.panelResetPassword = async function() {
@@ -1015,14 +1121,15 @@ async function loadUserCartAndWishlist(uid) {
         wishlist = enrichedWishlist;
         localStorage.setItem('wishlist', JSON.stringify(wishlist));
         updateWishlistUI();
-        
+        syncHeartButtons();
+
         // Refresh wishlist page if on it
         if (window.location.pathname.includes('wishlist.html') && typeof renderWishlistPage === 'function') {
             renderWishlistPage();
         }
 
         // Process cart similarly...
-        if (data.cart && typeof data.cart === 'object') {
+        if (data.cart && typeof data.cart === 'object' && Object.keys(data.cart).length > 0) {
             const enrichedCart = {};
             for (const [id, item] of Object.entries(data.cart)) {
                 try {
@@ -1030,7 +1137,7 @@ async function loadUserCartAndWishlist(uid) {
                     if (productDoc.exists) {
                         const productData = productDoc.data();
                         const livePrice = await calculateLivePrice(productData);
-                        
+
                         enrichedCart[id] = {
                             ...item,
                             n: productData.name || item.n || item.name,
@@ -1045,16 +1152,24 @@ async function loadUserCartAndWishlist(uid) {
                     enrichedCart[id] = item;
                 }
             }
-            
+
             cart = enrichedCart;
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartUI();
         } else {
-            cart = {};
-            localStorage.setItem('cart', JSON.stringify(cart));
+            // Firebase has no cart — preserve any locally stored cart (e.g. just added before sync)
+            try {
+                const localCart = localStorage.getItem('cart');
+                if (localCart) cart = JSON.parse(localCart);
+            } catch(e) {}
             updateCartUI();
         }
-        
+
+        // Notify page-specific handler (e.g. category pages re-render product buttons)
+        if (typeof window.onCartOrWishlistUpdated === 'function') {
+            window.onCartOrWishlistUpdated();
+        }
+
     } catch (e) {
         console.warn('loadUserCartAndWishlist error:', e.message);
     }
@@ -1072,13 +1187,23 @@ async function calculateLivePrice(product) {
     if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
         const ratePerGram = product.carat === '24CT' ? prices.gold : (prices.skjg || 6200);
         const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
-        price = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+        const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+        let discountAmt = product.discountAmount || 0;
+        if (!discountAmt && product.discountPercent > 0) {
+            discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+        }
+        price = basePrice - discountAmt;
     } else if (product.metalType === 'silver' && product.weight && product.dynamicPricing !== false) {
         const ratePerGram = (prices.skjs || prices.silver || 750) / 10;
         const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
-        price = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+        const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+        let discountAmt = product.discountAmount || 0;
+        if (!discountAmt && product.discountPercent > 0) {
+            discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+        }
+        price = basePrice - discountAmt;
     }
-    
+
     return price;
 }
 
@@ -1351,7 +1476,7 @@ const siteFooter = `
         <div>
             <h5 class="text-amber-500 font-bold text-base md:text-lg mb-4 md:mb-8 uppercase tracking-[0.15em] md:tracking-[0.2em]">Address</h5>
             <p class="opacity-70 mb-2 font-bold text-sm md:text-base">Sai Kiran Jewelleries A/C Showroom</p>
-            <p class="opacity-70 mb-6 md:mb-8 text-xs md:text-sm leading-relaxed">71-1-17, mg road, opp rr chicken, patamata, Vijayawada, Andhra Pradesh, 520010, India</p>
+            <p class="opacity-70 mb-6 md:mb-8 text-xs md:text-sm leading-relaxed">71-1-17, Opp RR Chicken, Canara Bank Rd, JD Nagar, Patamata, Vijayawada, Andhra Pradesh 520010</p>
             <div class="flex space-x-4 md:space-x-6 text-2xl md:text-4xl">
                 <a href="https://www.facebook.com/share/18LinN4tpZ/?mibextid=wwXIfr" class="social-icon text-gray-300 transition" title="Follow us on Facebook"><i class="fa-brands fa-facebook"></i></a>
                 <a href="https://wa.me/919705373804" class="social-icon text-gray-300 transition" title="WhatsApp Us"><i class="fa-brands fa-whatsapp"></i></a>
@@ -1781,7 +1906,7 @@ const sharedStyles = `
         padding-bottom: 0.5rem;
     }
     @media (min-width: 1024px) {
-        .trending-card { min-width: 240px; max-width: 260px; }
+        .trending-card { min-width: 240px; max-width: 260px;  margin-top: 5%}
         .trending-card:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: 0 8px 20px rgba(212,175,55,0.2); }
     }
 
@@ -2087,15 +2212,32 @@ async function renderCategoryProducts(category) {
             
             // Calculate live price
             let price = product.offerPrice || product.price || 0;
+            let dynamicBasePrice = null;
             if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
                 const ratePerGram = product.carat === '24CT' ? prices.gold : (prices.skjg || 6200);
                 const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
-                price = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+                const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+                let discountAmt = product.discountAmount || 0;
+                if (!discountAmt && product.discountPercent > 0) {
+                    discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                }
+                dynamicBasePrice = basePrice;
+                price = basePrice - discountAmt;
+            } else if (product.metalType === 'silver' && product.weight && product.dynamicPricing !== false) {
+                const ratePerGram = (prices.silver || 750) / 10;
+                const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
+                const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+                let discountAmt = product.discountAmount || 0;
+                if (!discountAmt && product.discountPercent > 0) {
+                    discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                }
+                dynamicBasePrice = basePrice;
+                price = basePrice - discountAmt;
             }
-            
+
             const image = product.images?.[0] || './images/placeholder.jpg';
             const name = product.name || 'Product';
-            const originalPrice = product.originalPrice || Math.round(price * 1.2);
+            const originalPrice = dynamicBasePrice || product.originalPrice || price;
             const discount = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
             
             // Check if in wishlist
@@ -2237,6 +2379,10 @@ function renderPrices(prices) {
         setPriceCookie(prices);
     }
     renderMarqueeContent(cachedPrices);
+    // Notify pages that prices changed (e.g. re-render trending)
+    if (typeof window.onPricesUpdated === 'function') {
+        window.onPricesUpdated(cachedPrices);
+    }
 }
 
 // Helper function to render marquee content
@@ -2369,8 +2515,13 @@ async function checkGoldSafetyBeforeAdd(id, name, callback, heartBtn = null) {
             callback(true); return;
         }
         const db = firebase.firestore();
-        const settingsDoc = await db.collection('settings').doc('dashboard').get();
-        if (settingsDoc.exists && settingsDoc.data().goldSafetyEnabled === true) {
+        const [settingsDoc, productDoc] = await Promise.all([
+            db.collection('settings').doc('dashboard').get(),
+            db.collection('products').doc(id).get()
+        ]);
+        const globalEnabled = settingsDoc.exists && settingsDoc.data().goldSafetyEnabled === true;
+        const productSafetyEnabled = productDoc.exists && productDoc.data().safetyEnabled === true;
+        if (globalEnabled && productSafetyEnabled) {
             const confirmed = await showSafetyConfirmation();
             if (confirmed) {
                 const idx = wishlist.findIndex(w => w.id === id);
@@ -2499,7 +2650,7 @@ function updateCartUI() {
 function updateWishlistUI() {
     const badge = document.getElementById('wishlist-badge');
     if (!badge) return;
-    
+
     const count = wishlist.length;
     if (count > 0) {
         badge.style.display = 'flex';
@@ -2507,7 +2658,36 @@ function updateWishlistUI() {
     } else {
         badge.style.display = 'none';
     }
+    syncHeartButtons();
 }
+
+// Sync all heart/wishlist buttons on the page with current wishlist state
+function syncHeartButtons() {
+    document.querySelectorAll('[data-product-id], [data-wishlist-id]').forEach(card => {
+        const id = card.dataset.productId || card.dataset.wishlistId;
+        if (!id) return;
+        const isWishlisted = wishlist.some(w => w.id === id);
+        const heartBtn = card.querySelector('.wishlist-btn, .heart-btn, .card-heart');
+        if (!heartBtn) return;
+        const icon = heartBtn.querySelector('i');
+        if (isWishlisted) {
+            heartBtn.classList.add('active', 'heart-active');
+            if (icon) {
+                icon.classList.remove('fa-regular', 'text-gray-600');
+                icon.classList.add('fa-solid', 'text-red-500');
+                icon.style.color = '#ef4444';
+            }
+        } else {
+            heartBtn.classList.remove('active', 'heart-active');
+            if (icon) {
+                icon.classList.remove('fa-solid', 'text-red-500');
+                icon.classList.add('fa-regular', 'text-gray-600');
+                icon.style.color = '';
+            }
+        }
+    });
+}
+window.syncHeartButtons = syncHeartButtons;
 
 // ===================== LOGIN PANEL FUNCTIONS =====================
 function toggleLoginPanel() {
@@ -2918,13 +3098,23 @@ async function renderWishlistPage() {
             if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
                 const ratePerGram = product.carat === '24CT' ? latestPrices.gold : (latestPrices.skjg || 6200);
                 const makingCharges = (product.makingCharges || 0) * product.weight;
-                offerPrice = Math.round((product.weight * ratePerGram) + makingCharges);
-                originalPrice = Math.round(offerPrice * 1.2);
+                const basePrice = Math.round((product.weight * ratePerGram) + makingCharges);
+                let discountAmt = product.discountAmount || 0;
+                if (!discountAmt && product.discountPercent > 0) {
+                    discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                }
+                originalPrice = basePrice;
+                offerPrice = basePrice - discountAmt;
             } else if (product.metalType === 'silver' && product.weight && product.dynamicPricing !== false) {
                 const ratePerGram = (latestPrices.skjs || latestPrices.silver || 750) / 10;
                 const makingCharges = (product.makingCharges || 0) * product.weight;
-                offerPrice = Math.round((product.weight * ratePerGram) + makingCharges);
-                originalPrice = Math.round(offerPrice * 1.2);
+                const basePrice = Math.round((product.weight * ratePerGram) + makingCharges);
+                let discountAmt = product.discountAmount || 0;
+                if (!discountAmt && product.discountPercent > 0) {
+                    discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                }
+                originalPrice = basePrice;
+                offerPrice = basePrice - discountAmt;
             }
 
             discount = originalPrice > offerPrice ? Math.round(((originalPrice - offerPrice) / originalPrice) * 100) : 0;
@@ -3338,4 +3528,5 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
+
 

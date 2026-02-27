@@ -16,7 +16,8 @@
        /* Product Grid - Equal size cards */
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; align-items: stretch; }
         @media (max-width: 640px) { .products-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; } }
-        
+        @media (min-width: 1024px) { .products-grid { grid-template-columns: repeat(5, 1fr); } }
+
         .product-card { background: white; border-radius: 1rem; overflow: hidden; border: 2px solid #e5e7eb; transition: all 0.3s ease; position: relative; display: flex; flex-direction: column; height: 100%; }
         
         .product-image-main { height: 200px !important; }
@@ -63,7 +64,7 @@
             position: relative;
             height: 220px;
             overflow: hidden;
-            background: #f9f9f9;
+            background: radial-gradient(ellipse at center, #ffffff 0%, #fdf8f2 60%, #f3ece0 100%);
             flex-shrink: 0;
         }
         @media (max-width: 640px) { .product-image-main { height: 160px; } }
@@ -308,7 +309,8 @@
             height: auto;
             object-fit: contain;
             cursor: zoom-in;
-            transition: all 0.3s ease;
+            transition: transform 0.12s ease;
+            will-change: transform;
         }
         
         .popup-main-img.zoomed {
@@ -759,13 +761,39 @@ function generateFallbackProducts() {
                 // Filter by search query
                 if (searchQuery && !product.name.toLowerCase().includes(searchQuery)) return;
                 
-                const discount = product.discountPercent || 0;
                 const weight = product.weight || (Math.random() * 8 + 2).toFixed(2);
-                const offerPrice = product.offerPrice || product.price || 0;
-                const originalPrice = product.originalPrice || offerPrice;
-                
+                const prices = (typeof cachedPrices !== 'undefined' && cachedPrices) || { gold: 6400, skjg: 6200, silver: 750 };
+
+                let offerPrice = product.offerPrice || product.price || 0;
+                let dynamicBasePrice = null;
+
+                if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
+                    const ratePerGram = product.carat === '24CT' ? prices.gold : (prices.skjg || 6200);
+                    const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
+                    const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+                    let discountAmt = product.discountAmount || 0;
+                    if (!discountAmt && product.discountPercent > 0) {
+                        discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                    }
+                    dynamicBasePrice = basePrice;
+                    offerPrice = basePrice - discountAmt;
+                } else if (product.metalType === 'silver' && product.weight && product.dynamicPricing !== false) {
+                    const ratePerGram = (prices.silver || 750) / 10;
+                    const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
+                    const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+                    let discountAmt = product.discountAmount || 0;
+                    if (!discountAmt && product.discountPercent > 0) {
+                        discountAmt = Math.round((basePrice * product.discountPercent) / 100);
+                    }
+                    dynamicBasePrice = basePrice;
+                    offerPrice = basePrice - discountAmt;
+                }
+
+                const originalPrice = dynamicBasePrice || product.originalPrice || offerPrice;
+                const discount = originalPrice > offerPrice ? parseFloat(((originalPrice - offerPrice) / originalPrice) * 100).toFixed(2) : 0;
+
                 // Check if prices are same (no discount)
-                const hasDiscount = originalPrice > offerPrice && discount > 0;
+                const hasDiscount = (originalPrice > offerPrice && discount > 0);
                 
                 // Use product images or fallback
                 const images = product.images && product.images.length > 0 
@@ -834,7 +862,7 @@ function generateFallbackProducts() {
                     <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${product.id}" onclick="${isOutOfStock ? '' : `openPopup('${product.id}', ${offerPrice}, ${originalPrice}, ${discount}, '${weight}', ${isOutOfStock})`}">
                         <div class="product-image-gallery">
                             <div class="product-image-main">
-                                <div class="discount-badge ${discountBadgeClass}">${discount}% OFF</div>
+                                <div class="discount-badge ${discountBadgeClass}">${parseFloat(discount)}% OFF</div>
                                 <button onclick="event.stopPropagation(); toggleWishlistWithButton('${product.id}', '${product.name}', this)" 
                                     class="wishlist-btn ${isWishlisted ? 'active' : ''}">
                                     <i class="${isWishlisted ? 'fa-solid text-red-500' : 'fa-regular text-gray-600'} fa-heart"></i>
@@ -986,33 +1014,41 @@ function generateFallbackProducts() {
 
 
 
-        function addToCartWithFeedback(id, name, price) {
+        async function addToCartWithFeedback(id, name, price) {
             // Require login — open sidebar instantly
             if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) {
                 if (typeof openLoginSidebar === 'function') openLoginSidebar('Please login to add items to cart 🛍️');
                 return;
             }
 
+            // Check gold safety for gold items
+            const product = firebaseProducts.find(p => p.id === id);
+            if (product && product.metalType === 'gold' && typeof checkGoldSafetyBeforeAdd === 'function') {
+                let allowed = false;
+                await new Promise(resolve => {
+                    checkGoldSafetyBeforeAdd(id, name, (result) => {
+                        allowed = result;
+                        resolve();
+                    });
+                });
+                if (!allowed) return;
+            }
+
             const currentQty = cart[id]?.qty || 0;
             const newQty = currentQty + 1;
-            
-            cart[id] = { 
-                qty: newQty, 
-                n: name, 
+
+            cart[id] = {
+                qty: newQty,
+                n: name,
                 name: name,
-                p: price 
+                p: price
             };
-            
+
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartUI();
             if (typeof saveUserCartAndWishlist === 'function') saveUserCartAndWishlist(); // sync to Firebase
-            
-            // Visual feedback
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = 'Added!';
-            btn.style.background = '#059669';
-            
+
+            // Schedule re-render first so it always runs regardless of button feedback
             setTimeout(() => {
                 if (firebaseProducts.length > 0) {
                     renderInventoryProducts();
@@ -1020,6 +1056,15 @@ function generateFallbackProducts() {
                     generateFallbackProducts();
                 }
             }, 500);
+
+            // Visual feedback (safe — won't block re-render if event is unavailable)
+            try {
+                const btn = (event && event.target) ? event.target.closest('button') || event.target : null;
+                if (btn) {
+                    btn.innerText = 'Added!';
+                    btn.style.background = '#059669';
+                }
+            } catch(e) {}
         }
 
         window.updateCartQty = async function(id, delta, price, originalPrice, name) {
@@ -1073,6 +1118,32 @@ function generateFallbackProducts() {
         updatePopupButton(id, price, Math.max(0, newQty), originalPrice);
     }
 }
+
+        // Bridge for +/- buttons that call updateCartItem(id, delta)
+        window.updateCartItem = function(id, delta) {
+            const product = firebaseProducts.find(p => p.id === id);
+            if (!product) return;
+            const prices = (typeof cachedPrices !== 'undefined' && cachedPrices) || { gold: 6400, skjg: 6200, silver: 750 };
+            let offerPrice = product.offerPrice || product.price || 0;
+            let basePrice = offerPrice;
+            if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
+                const rate = product.carat === '24CT' ? prices.gold : (prices.skjg || 6200);
+                const mc = (product.makingCharges || 0) * parseFloat(product.weight);
+                basePrice = Math.round(parseFloat(product.weight) * rate + mc);
+                let disc = product.discountAmount || 0;
+                if (!disc && product.discountPercent > 0) disc = Math.round((basePrice * product.discountPercent) / 100);
+                offerPrice = basePrice - disc;
+            } else if (product.metalType === 'silver' && product.weight && product.dynamicPricing !== false) {
+                const rate = (prices.silver || 750) / 10;
+                const mc = (product.makingCharges || 0) * parseFloat(product.weight);
+                basePrice = Math.round(parseFloat(product.weight) * rate + mc);
+                let disc = product.discountAmount || 0;
+                if (!disc && product.discountPercent > 0) disc = Math.round((basePrice * product.discountPercent) / 100);
+                offerPrice = basePrice - disc;
+            }
+            updateCartQty(id, delta, offerPrice, basePrice, product.name);
+            setTimeout(() => { if (firebaseProducts.length > 0) renderInventoryProducts(); }, 300);
+        };
 
         // Touch/Swipe handlers for mobile
         function handleTouchStart(e) {
@@ -1178,7 +1249,7 @@ function generateFallbackProducts() {
                 popupOriginal.innerText = `₹${original.toLocaleString()}`;
                 popupOriginal.classList.remove('hidden');
                 popupPrice.innerText = `₹${price.toLocaleString()}`;
-                popupDiscount.innerText = `${discount}% OFF`;
+                popupDiscount.innerText = `${parseFloat(discount)}% OFF`;
                 popupDiscount.classList.add('show');
             } else {
                 popupOriginal.classList.add('hidden');
@@ -1200,7 +1271,10 @@ function generateFallbackProducts() {
                 img.addEventListener('touchmove', handleTouchMove);
                 img.addEventListener('touchend', handleTouchEnd);
                 img.addEventListener('mousedown', handleMouseDown);
-                img.style.cursor = 'grab';
+                // Remove previous wheel listener before adding new one
+                img.removeEventListener('wheel', handleWheelZoom);
+                img.addEventListener('wheel', handleWheelZoom, { passive: false });
+                img.style.cursor = 'zoom-in';
             }
             
             resetImageOffset();
@@ -1263,37 +1337,62 @@ function generateFallbackProducts() {
             updateZoomButtons();
         }
 
+        function applyZoom(img) {
+            img.style.transform = `scale(${zoomLevel}) translate(${imageOffsetX / zoomLevel}px, ${imageOffsetY / zoomLevel}px)`;
+            img.style.cursor = zoomLevel > 1 ? 'grab' : 'zoom-in';
+            if (zoomLevel > 1) img.classList.add('zoomed');
+            else img.classList.remove('zoomed');
+            updateZoomButtons();
+        }
+
         function zoomIn() {
             if (zoomLevel < 4) {
-                zoomLevel += 1;
+                zoomLevel = Math.min(4, parseFloat((zoomLevel + 0.5).toFixed(1)));
                 const img = document.getElementById('popup-main-img');
-                img.style.transform = `scale(${zoomLevel}) translate(${imageOffsetX / zoomLevel}px, ${imageOffsetY / zoomLevel}px)`;
-                img.classList.add('zoomed');
-                img.style.cursor = 'grab';
-                updateZoomButtons();
+                applyZoom(img);
             }
         }
 
         function zoomOut() {
             if (zoomLevel > 1) {
-                zoomLevel -= 1;
+                zoomLevel = Math.max(1, parseFloat((zoomLevel - 0.5).toFixed(1)));
                 const img = document.getElementById('popup-main-img');
-                img.style.transform = `scale(${zoomLevel}) translate(${imageOffsetX / zoomLevel}px, ${imageOffsetY / zoomLevel}px)`;
-                if (zoomLevel === 1) {
-                    img.classList.remove('zoomed');
-                    resetImageOffset();
-                    img.style.cursor = 'default';
-                }
-                updateZoomButtons();
+                if (zoomLevel === 1) resetImageOffset();
+                applyZoom(img);
             }
         }
 
         function updateZoomButtons() {
             const zoomInBtn = document.getElementById('zoom-in-btn');
             const zoomOutBtn = document.getElementById('zoom-out-btn');
-            
-            zoomInBtn.disabled = zoomLevel >= 4;
-            zoomOutBtn.disabled = zoomLevel <= 1;
+            if (zoomInBtn) zoomInBtn.disabled = zoomLevel >= 4;
+            if (zoomOutBtn) zoomOutBtn.disabled = zoomLevel <= 1;
+        }
+
+        function handleWheelZoom(e) {
+            e.preventDefault();
+            const img = document.getElementById('popup-main-img');
+            if (!img) return;
+
+            const delta = e.deltaY < 0 ? 0.25 : -0.25;
+            const newZoom = Math.max(1, Math.min(4, parseFloat((zoomLevel + delta).toFixed(2))));
+            if (newZoom === zoomLevel) return;
+
+            // Zoom towards cursor position
+            const rect = img.getBoundingClientRect();
+            const cursorX = e.clientX - rect.left - rect.width / 2;
+            const cursorY = e.clientY - rect.top - rect.height / 2;
+            const scale = newZoom / zoomLevel;
+            imageOffsetX = cursorX - scale * (cursorX - imageOffsetX);
+            imageOffsetY = cursorY - scale * (cursorY - imageOffsetY);
+
+            // Clamp offsets
+            const maxOffset = 150 * (newZoom - 1);
+            imageOffsetX = Math.max(-maxOffset, Math.min(maxOffset, imageOffsetX));
+            imageOffsetY = Math.max(-maxOffset, Math.min(maxOffset, imageOffsetY));
+
+            zoomLevel = newZoom;
+            applyZoom(img);
         }
 
         function togglePopupWishlist() {
@@ -1536,6 +1635,11 @@ window.panelLogout = async function() {
         
         
         
+// Re-render product buttons after Firebase loads cart/wishlist (e.g. cross-page add-to-cart)
+window.onCartOrWishlistUpdated = function() {
+    if (firebaseProducts.length > 0) renderInventoryProducts();
+};
+
         // Listen for inventory updates from other pages
         window.addEventListener('storage', (e) => {
             if (e.key === 'inventoryUpdate') {
@@ -1546,6 +1650,13 @@ window.panelLogout = async function() {
                 }
             }
         });
+
+        // Re-render products when gold/silver prices change
+        window.onPricesUpdated = function(newPrices) {
+            if (firebaseProducts && firebaseProducts.length > 0) {
+                renderInventoryProducts();
+            }
+        };
 
         // Start checking
         initFirebase();

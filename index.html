@@ -242,28 +242,44 @@
         }
 
         /* Nav buttons — hidden by default, shown by JS */
-        .trending-nav-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 45px;
-            height: 45px;
-            background: var(--gold);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            z-index: 100;
-            transition: all 0.3s;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        .trending-nav-btn.prev { left: 10px; }
-        .trending-nav-btn.next { right: 10px; }
-        @media (min-width: 1024px) { .trending-nav-btn { display: none !important; } }
+        /* Nav buttons — hidden by default, shown by JS */
+.trending-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 45px;
+    height: 45px;
+    background: var(--gold);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.3s;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+}
+.trending-nav-btn.prev { left: 0; transform: translateY(-50%) translateX(-50%); }
+.trending-nav-btn.next { right: 0; transform: translateY(-50%) translateX(50%); }
+@media (min-width: 1024px) { .trending-nav-btn { display: none !important; } }
+@media (max-width: 1023px) {
+    .trending-container {
+    overflow: visible;          /* allow nav buttons to show outside bounds */
+    position: relative !important;
+    padding: 1rem 0;
+    isolation: isolate;
+}
+
+/* Re-clip the inner scroll track only */
+#trending-container {
+    overflow: hidden;
+    width: 100%;
+}
+}
 
 
         /* Trending card styles */
@@ -624,15 +640,17 @@
         }
 
         #item-popup .popup-image-section {
-            width: 100%;
-            height: 40vh;
-            background: #f3f4f6;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    width: 100%;
+    height: 40vh;
+    background: #f3f4f6;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Allow zoomed image to overflow — clipped by outer container */
+    contain: none;
+}
 
         @media (min-width: 768px) {
             #item-popup .popup-image-section {
@@ -657,14 +675,97 @@
         }
 
         /* Popup image zoom effect */
-        #pop-img {
-            transition: transform 0.3s ease-in-out;
-        }
+#pop-img {
+    transition: transform 0.25s ease;
+    transform-origin: center center;
+    will-change: transform;
+    display: block;
+}
 
-        #pop-img.zoomed {
-            transform: scale(2);
-            cursor: zoom-out;
-        }
+#pop-img.is-zoomed {
+    cursor: grab;
+}
+
+#pop-img.is-dragging {
+    cursor: grabbing;
+    transition: none;
+}
+
+.popup-zoom-controls {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 30;
+}
+
+.popup-zoom-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.92);
+    border: 2px solid var(--gold, #c8a96e);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--gold, #c8a96e);
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.popup-zoom-btn:hover:not([disabled]) {
+    background: var(--gold, #c8a96e);
+    color: white;
+    transform: scale(1.08);
+}
+
+.popup-zoom-btn[disabled] {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Minimap (zoom navigator) */
+#pop-minimap-wrap {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    width: 80px;
+    height: 80px;
+    border: 2px solid #c8a96e;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+    display: none;
+    z-index: 30;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+
+#pop-minimap-wrap.visible {
+    display: block;
+}
+
+#pop-minimap-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+#pop-minimap-viewport {
+    position: absolute;
+    border: 2px solid #ef4444;
+    border-radius: 2px;
+    pointer-events: none;
+    box-sizing: border-box;
+}
 
         /* Popup heart button styling */
         .popup-heart-btn {
@@ -1003,7 +1104,10 @@
         <!-- Hero Carousel — images loaded from Firebase -->
 <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
     <div class="carousel-inner" id="heroCarouselInner">
-        <!-- Images loaded dynamically from Firebase -->
+        <!-- Skeleton placeholder shown until Firebase images load -->
+        <div class="carousel-item active" id="carousel-skeleton">
+            <div class="carousel-img-fixed d-block" style="background:linear-gradient(90deg,#e8e0d0 25%,#f5f0e8 50%,#e8e0d0 75%);background-size:200% 100%;animation:carouselSkeleton 1.4s ease-in-out infinite;"></div>
+        </div>
     </div>
     <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel"
         data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
@@ -1017,45 +1121,60 @@
     let carouselPendingTimer = null;
 
     function applyCarouselImages(images) {
-        const inner = document.getElementById('heroCarouselInner');
-        if (!inner || !images.length) return;
+    const inner = document.getElementById('heroCarouselInner');
+    if (!inner || !images.length) return;
 
+    const carouselEl = document.getElementById('heroCarousel');
+
+    function _initBootstrapCarousel() {
+        if (window.bootstrap && carouselEl) {
+            const existing = bootstrap.Carousel.getInstance(carouselEl);
+            if (existing) existing.dispose();
+            new bootstrap.Carousel(carouselEl, { interval: 5000, ride: 'carousel' });
+        }
+    }
+
+    function _buildCarousel() {
         inner.innerHTML = '';
         images.forEach((img, idx) => {
             const div = document.createElement('div');
             div.className = 'carousel-item' + (idx === 0 ? ' active' : '');
-            div.innerHTML = `<img src="${img.url}" class="carousel-img-fixed d-block" alt="Banner ${idx + 1}" loading="${idx === 0 ? 'eager' : 'lazy'}">`;
+            const im = document.createElement('img');
+            im.src = img.url;
+            im.className = 'carousel-img-fixed d-block';
+            im.alt = 'Banner ' + (idx + 1);
+            div.appendChild(im);
             inner.appendChild(div);
         });
 
-       // Reinitialise Bootstrap carousel — wait for Bootstrap JS if not yet loaded
-        const carouselEl = document.getElementById('heroCarousel');
-        function initBootstrapCarousel() {
-            if (window.bootstrap && carouselEl) {
-                const existing = bootstrap.Carousel.getInstance(carouselEl);
-                if (existing) existing.dispose();
-                new bootstrap.Carousel(carouselEl, { interval: 5000, ride: 'carousel' });
-            }
-        }
         if (window.bootstrap) {
-            initBootstrapCarousel();
+            _initBootstrapCarousel();
         } else {
-            // Bootstrap JS not yet loaded — wait for it
             const bsScript = document.querySelector('script[src*="bootstrap.bundle"]');
             if (bsScript) {
-                bsScript.addEventListener('load', initBootstrapCarousel);
+                bsScript.addEventListener('load', _initBootstrapCarousel);
             } else {
-                // Fallback: poll until bootstrap is available
                 const poll = setInterval(() => {
-                    if (window.bootstrap) {
-                        clearInterval(poll);
-                        initBootstrapCarousel();
-                    }
+                    if (window.bootstrap) { clearInterval(poll); _initBootstrapCarousel(); }
                 }, 100);
                 setTimeout(() => clearInterval(poll), 10000);
             }
         }
     }
+
+    // Preload ALL images first — zero white-flash
+    let _loaded = 0;
+    images.forEach((imgData) => {
+        const tmp = new Image();
+        tmp.onload = tmp.onerror = () => {
+            _loaded++;
+            if (_loaded === images.length) _buildCarousel();
+        };
+        tmp.src = imgData.url;
+    });
+    // Safety fallback: if preload stalls > 3 seconds, just build anyway
+    setTimeout(() => { if (_loaded < images.length) _buildCarousel(); }, 3000);
+}
 
     function initCarouselListener() {
         if (typeof firebase === 'undefined') return;
@@ -1194,8 +1313,9 @@
             <!-- Image Section -->
             <div class="popup-image-section">
                 <div id="pop-discount-label"
-                    class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold z-20">
-                </div>
+    class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold z-20"
+    style="display:none;">
+</div>
 
                 <!-- Carousel Buttons -->
                 <button onclick="changePopImg(-1)"
@@ -1205,19 +1325,26 @@
 
                 <!-- Main Image -->
                 <img id="pop-img" src=""
-                    class="w-full h-full object-cover transition-transform duration-500 origin-center">
+    class="w-full h-full object-contain transition-transform duration-300 origin-center"
+    style="max-width:100%;max-height:100%;width:auto;height:auto;position:relative;">
 
                 <!-- Controls Overlay -->
-                <div class="absolute bottom-3 right-3 flex gap-2 z-30">
-                    <button onclick="event.stopPropagation(); zoomPopupImage()"
-                        class="bg-white/80 hover:bg-white rounded-full w-9 h-9 flex items-center justify-center border-none transition"><img
-                            src="./images/Magnifier.png" style="width:18px;height:18px;"></button>
-                    <button onclick="event.stopPropagation(); togglePopupWishlist(currentPopId)"
-                        class="popup-heart-btn rounded-full w-9 h-9 flex items-center justify-center border-none transition text-lg"
-                        style="background: transparent;">
-                        <i class="fa-regular fa-heart"></i>
-                    </button>
-                </div>
+<!-- Zoom controls (bottom-right) -->
+<div class="popup-zoom-controls">
+    <button class="popup-zoom-btn" id="pop-zoom-in"  onclick="event.stopPropagation(); popupZoomIn()"  title="Zoom In">+</button>
+    <button class="popup-zoom-btn" id="pop-zoom-out" onclick="event.stopPropagation(); popupZoomOut()" title="Zoom Out" disabled>−</button>
+</div>
+<!-- Minimap (bottom-left) -->
+<div id="pop-minimap-wrap">
+    <img id="pop-minimap-img" src="" alt="">
+    <div id="pop-minimap-viewport"></div>
+</div>
+<!-- Heart (top-right corner) -->
+<button onclick="event.stopPropagation(); togglePopupWishlist(currentPopId)"
+    class="popup-heart-btn absolute top-3 right-3 rounded-full w-9 h-9 flex items-center justify-center border-none transition text-lg z-30"
+    style="background:rgba(0,0,0,0.3);">
+    <i class="fa-regular fa-heart"></i>
+</button>
             </div>
 
             <!-- Details Section -->
@@ -1345,15 +1472,15 @@
 
         // Categories data and render function
         const categories = [
-            { name: 'Rings', img: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400' },
-            { name: 'Chains', img: 'https://img-s-msn-com.akamaized.net/tenant/amp/entityid/AA1WOFwN.img?w=1012&h=569&m=6&x=494&y=158&s=264&d=264' },
-            { name: 'Bracelets', img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400' },
-            { name: 'Harams', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400' },
-            { name: 'Earrings', img: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400' },
-            { name: 'Bangles', img: 'https://images.unsplash.com/photo-1611085583191-a3b130944abc?w=400' },
-            { name: 'Coins', img: 'https://images.unsplash.com/photo-1584270354949-1c8e6b4b9a1c?w=400' },
-            { name: 'Necklaces', img: 'https://images.unsplash.com/photo-1584270354949-1c8e6b4b9a1c?w=400' },
-            { name: 'Other', img: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400' }
+            { name: 'Rings', img: 'images/rings_cat.avif' },
+            { name: 'Chains', img: 'images/chains_cat.webp' },
+            { name: 'Bracelets', img: 'images/bracelets_cat.jpg' },
+            { name: 'Harams', img: 'images/harams_cat.jpeg' },
+            { name: 'Earrings', img: 'images/earrings_cat.webp' },
+            { name: 'Bangles', img: 'images/bangles_cat.jpg' },
+            { name: 'Coins', img: 'images/coins_cat.png' },
+            { name: 'Necklaces', img: 'images/necklaces_cat.webp' },
+            { name: 'Other', img: 'images/others_cat.webp' }
         ];
 
         // Render categories
@@ -1410,7 +1537,7 @@ function handleWishlistClick(event, id, name) {
     const btnElement = event.currentTarget; // The button that was clicked
     
     // Call toggleWishlist with proper element
-    toggleWishlist(event, id, name, btnElement);
+    toggleWishlist(id, name, btnElement);
     return false;
 }
 
@@ -1448,6 +1575,8 @@ async function renderTrending() {
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     if (data.onlineEnabled === false) return;
+                    if (data.isActive === false) return;
+                    if (data.inStock === false || data.stockQuantity === 0) return;
                     trendingProducts.push({ id: doc.id, ...data });
                 });
 
@@ -1474,46 +1603,36 @@ async function renderTrending() {
                     if (product.metalType === 'gold' && product.weight && product.dynamicPricing !== false) {
                         const ratePerGram = product.carat === '24CT' ? latestPrices.gold : latestPrices.skjg;
                         const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
-                        const calculatedPrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
-                        
-                        // Use calculated price as offer price if dynamic pricing enabled
-                        offerPrice = calculatedPrice;
-                        
-                        // Only set originalPrice if product has a stored originalPrice that's higher
-                        if (product.originalPrice && product.originalPrice > offerPrice) {
-                            originalPrice = product.originalPrice;
-                            discount = Math.round(((originalPrice - offerPrice) / originalPrice) * 100);
-                            hasDiscount = true;
-                        } else {
-                            originalPrice = offerPrice; // No discount
-                            discount = 0;
-                            hasDiscount = false;
+                        const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+                        let discountAmt = product.discountAmount || 0;
+                        if (!discountAmt && product.discountPercent > 0) {
+                            discountAmt = Math.round((basePrice * product.discountPercent) / 100);
                         }
+                        originalPrice = basePrice;
+                        offerPrice = basePrice - discountAmt;
+                        discount = discountAmt > 0 ? parseFloat(((originalPrice - offerPrice) / originalPrice) * 100).toFixed(2) : 0;
+hasDiscount = discountAmt > 0;
                     } else if (product.metalType === 'silver' && product.weight && product.dynamicPricing !== false) {
                         const ratePerGram = (latestPrices.skjs || latestPrices.silver || 750) / 10;
                         const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
-                        const calculatedPrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
-                        
-                        offerPrice = calculatedPrice;
-                        
-                        if (product.originalPrice && product.originalPrice > offerPrice) {
-                            originalPrice = product.originalPrice;
-                            discount = Math.round(((originalPrice - offerPrice) / originalPrice) * 100);
-                            hasDiscount = true;
-                        } else {
-                            originalPrice = offerPrice;
-                            discount = 0;
-                            hasDiscount = false;
+                        const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
+                        let discountAmt = product.discountAmount || 0;
+                        if (!discountAmt && product.discountPercent > 0) {
+                            discountAmt = Math.round((basePrice * product.discountPercent) / 100);
                         }
+                        originalPrice = basePrice;
+                        offerPrice = basePrice - discountAmt;
+                        discount = discountAmt > 0 ? parseFloat(((originalPrice - offerPrice) / originalPrice) * 100).toFixed(2) : 0;
+hasDiscount = discountAmt > 0;
                     } else {
                         // Non-dynamic pricing - use stored prices
                         originalPrice = product.originalPrice || offerPrice;
                         if (originalPrice > offerPrice) {
-                            discount = Math.round(((originalPrice - offerPrice) / originalPrice) * 100);
-                            hasDiscount = discount > 0;
-                        } else {
-                            hasDiscount = false;
-                        }
+    discount = parseFloat(((originalPrice - offerPrice) / originalPrice) * 100).toFixed(2);
+    hasDiscount = parseFloat(discount) > 0;
+} else {
+    hasDiscount = false;
+}
                     }
 
                     const mainImage = (product.images && product.images.length > 0)
@@ -1528,7 +1647,7 @@ async function renderTrending() {
                         <div class="trending-card-wrapper" data-item-id="${product.id}">
                             <div class="trending-card" data-product-id="${product.id}">
                                 <div class="card-image-section" onclick="handleCardClick(event, '${product.id}', ${offerPrice}, ${originalPrice}, ${discount}, '${safeName}', '${mainImage}')">
-                                    ${hasDiscount ? `<div class="offer-badge">${discount}% OFF</div>` : ''}
+                                    ${hasDiscount ? `<div class="offer-badge">${parseFloat(discount)}% OFF</div>` : ''}
                                     <button onclick="handleWishlistClick(event, '${product.id}', '${safeName}')" 
         class="card-heart ${isWishlisted ? 'heart-active' : ''}" 
         data-product-id="${product.id}">
@@ -1551,7 +1670,7 @@ async function renderTrending() {
                                                 <button onclick="event.stopPropagation(); updateCartQty('${product.id}', 1, ${offerPrice}, ${originalPrice}, '${safeName}');">+</button>
                                             </div>
                                         ` : `
-                                            <button onclick="event.stopPropagation(); updateCartQty('${product.id}', 1, ${offerPrice}, ${originalPrice}, '${safeName}');">Add to Cart</button>
+                                            <button id="atc-${product.id}" onclick="event.stopPropagation(); _doAddToCartWithAnim('${product.id}', ${offerPrice}, ${originalPrice}, '${safeName}');">Add to Cart</button>
                                         `}
                                     </div>
                                 </div>
@@ -1585,8 +1704,13 @@ async function renderTrending() {
             try {
                 if (typeof firebase === 'undefined' || !firebase.firestore) { callback(true); return; }
                 const db = firebase.firestore();
-                const settingsDoc = await db.collection('settings').doc('dashboard').get();
-                if (settingsDoc.exists && settingsDoc.data().goldSafetyEnabled === true) {
+                 const [settingsDoc, productDoc] = await Promise.all([
+                    db.collection('settings').doc('dashboard').get(),
+                    db.collection('products').doc(id).get()
+                ]);
+                const globalEnabled = settingsDoc.exists && settingsDoc.data().goldSafetyEnabled === true;
+                const productSafetyEnabled = productDoc.exists && productDoc.data().safetyEnabled === true;
+                if (globalEnabled && productSafetyEnabled) {
                     const confirmed = await (typeof showSafetyConfirmation === 'function' ? showSafetyConfirmation() : Promise.resolve(false));
                     if (confirmed) {
                         const idx = wishlist.findIndex(w => w.id === id);
@@ -1714,6 +1838,13 @@ localStorage.removeItem('wishlist');
                 if (e.target.id === 'item-popup') closePopup();
             });
         });
+
+        // Re-render trending when gold/silver prices change
+        window.onPricesUpdated = function(newPrices) {
+            if (typeof trendingProducts !== 'undefined' && trendingProducts && trendingProducts.length > 0) {
+                renderTrending();
+            }
+        };
         // Initialize trending section behavior - Updated for dynamic layout
         function initTrendingSection() {
             const trendingContainer = document.getElementById('trending-container');
@@ -1799,6 +1930,54 @@ localStorage.removeItem('wishlist');
                 const duration = Math.max(40, Math.round(singleW / 3)); // 3px/s — slower scroll
                 inner.style.setProperty('--scroll-duration', duration + 's');
 
+                // ── Desktop drag-to-scroll ──
+                // ── Desktop drag-to-scroll ──
+                let _dragStartX = 0, _dragOffset = 0, _mouseDown = false, _dragActive = false;
+                const _getTranslateX = () => {
+                    const st = getComputedStyle(inner);
+                    const m = new DOMMatrix(st.transform);
+                    return m.m41;
+                };
+
+                container.style.cursor = 'grab';
+                container.addEventListener('mousedown', (e) => {
+                    // Don't intercept button/link clicks
+                    if (e.target.closest('button, a, .card-heart')) return;
+                    _mouseDown = true;
+                    _dragActive = false;
+                    _dragStartX = e.clientX;
+                    _dragOffset = _getTranslateX();
+                });
+                document.addEventListener('mousemove', (e) => {
+                    if (!_mouseDown) return;
+                    const dx = e.clientX - _dragStartX;
+                    // Only start drag after 5px threshold
+                    if (!_dragActive && Math.abs(dx) < 5) return;
+                    if (!_dragActive) {
+                        _dragActive = true;
+                        inner.style.animation = 'none';
+                        container.style.cursor = 'grabbing';
+                    }
+                    const half = inner.scrollWidth / 2;
+                    let newX = _dragOffset + dx;
+                    if (newX > 0) newX -= half;
+                    if (newX < -half) newX += half;
+                    inner.style.transform = `translateX(${newX}px)`;
+                });
+                document.addEventListener('mouseup', () => {
+                    if (!_mouseDown) return;
+                    _mouseDown = false;
+                    if (!_dragActive) return;
+                    _dragActive = false;
+                    container.style.cursor = 'grab';
+                    // Resume animation from current position
+                    const curX = _getTranslateX();
+                    const half = inner.scrollWidth / 2;
+                    const pct = Math.abs(curX / half) * 100;
+                    inner.style.animation = '';
+                    inner.style.animationDelay = `-${(pct / 100) * duration}s`;
+                });
+
             } else {
                 // ══════════════════════════════════════════════════════
                 // MOBILE / TABLET — testimonial-style fade pagination
@@ -1840,6 +2019,23 @@ localStorage.removeItem('wishlist');
                 window._trendGoPage = _goPage;
                 _goPage(0);
 
+                // ── Mobile touch swipe ──
+                let _touchStartX = 0, _touchStartTime = 0;
+                container.addEventListener('touchstart', (e) => {
+                    _touchStartX = e.touches[0].clientX;
+                    _touchStartTime = Date.now();
+                }, { passive: true });
+                container.addEventListener('touchend', (e) => {
+                    const dx = e.changedTouches[0].clientX - _touchStartX;
+                    const dt = Date.now() - _touchStartTime;
+                    // Swipe threshold: 40px in under 500ms
+                    if (Math.abs(dx) > 40 && dt < 500) {
+                        const c = document.getElementById('trending-container');
+                        if (dx < 0) window._trendGoPage(c._tPage + 1);  // swipe left = next
+                        else window._trendGoPage(c._tPage - 1);          // swipe right = prev
+                    }
+                }, { passive: true });
+
                 if (total > 1) {
                     if (prevBtn) {
                         prevBtn.style.display = 'flex';
@@ -1872,109 +2068,181 @@ localStorage.removeItem('wishlist');
 
         // Render testimonials
         const testimonials = [
-            {
-                "quote": "సాయి కిరణ్ జ్యుయలరీస్లోని పనితనం అసమానమైనది. నా వివాహ హారాన్ని ఇక్కడ కొన్నాను, వివరాల పట్ల ఉన్న శ్రద్ధ నిజంగా అద్భుతం.",
-                "author": "లక్ష్మి"
-            },
-            {
-                "quote": "అద్భుతమైన నాణ్యత మరియు అసలైన బంగారం. సిబ్బంది చాలా సహాయకారులు, ప్రతి ముక్క గురించి పూర్తి అవగాహన ఉంది. ఖచ్చితంగా సిఫారసు చేస్తున్నాను!",
-                "author": "శ్రీనివాస్"
-            },
-            {
-                "quote": "ఈ నగరంలోని ఉత్తమ ఆభరణాల దుకాణం ఇదే. వారి డిజైన్లు ప్రత్యేకమైనవి, ధరలు న్యాయమైనవి. ఖచ్చితంగా మళ్లీ వస్తాను.",
-                "author": "దివ్య"
-            },
-            {
-                "quote": "హాల్‌మార్కింగ్ ప్రక్రియ మరియు పారదర్శకత నన్ను చాలా ఆకర్షించాయి. ప్రతి ముక్కకు ప్రామాణికత ధృవీకరణ పత్రం ఇస్తారు.",
-                "author": "కృష్ణ"
-            },
-            {
-                "quote": "గాజులు మరియు చెవిపోగుల అందమైన సేకరణ. కస్టమర్ సేవ అసాధారణం, ముక్కలను మన ఇష్టం ప్రకారం కూడా తయారు చేస్తారు!",
-                "author": "స్వాతి"
-            },
-            {
-                "quote": "నేను ఒక నిశ్చితార్థ ఉంగరాన్ని కొన్నాను, మరింత సంతోషంగా ఉండలేను. డిజైన్ అందమైనది, నాణ్యత ప్రీమియం స్థాయిలో ఉంది.",
-                "author": "రవి"
-            },
-            {
-                "quote": "ఇక్కడ షాపింగ్ చేయడం గొప్ప అనుభవం. సిబ్బంది ప్రతి ఆభరణం యొక్క శుద్ధత మరియు బరువును స్పష్టంగా వివరించారు.",
-                "author": "పద్మ"
-            },
-            {
-                "quote": "బంగారు గొలుసులు మరియు లాకెట్ల అద్భుతమైన సేకరణ. సేల్ సమయంలో గొప్ప డిస్కౌంట్ లభించింది. ప్రతి రూపాయికి విలువైనది!",
-                "author": "వెంకటేష్"
-            },
-            {
-                "quote": "మార్పిడి విధానం చాలా కస్టమర్-స్నేహపూర్వకమైనది. నా పాత ఆభరణాన్ని కొత్త డిజైన్‌తో ఎటువంటి ఇబ్బంది లేకుండా మార్చుకున్నాను.",
-                "author": "సరస్వతి"
-            },
-            {
-                "quote": "నా కూతురి వివాహ ఆభరణాల కోసం సందర్శించాను. వైవిధ్యం మరియు నాణ్యత నా అంచనాలను మించిపోయాయి. అద్భుతమైన సేవ!",
-                "author": "రామయ్య"
-            },
-            { quote: "Perfect place for gifting jewelry. Their gift wrapping is elegant and the pieces are always premium quality.", author: "Anil" },
-            { quote: "I love their harams and bracelets collection. The designs are trendy yet traditional. Definitely coming back!", author: "Dhanu" },
-            { quote: "Best hallmarked gold in town. The transparency in pricing and weight is commendable. Trust them completely.", author: "Sanjay Bulla" },
-            { quote: "Got my earrings customized here and the result was perfect. The craftspeople are true artists.", author: "Priyanka" },
-            { quote: "Excellent investment in gold jewelry. The pieces appreciate in value and the customer service is world-class.", author: "David" }
-        ];
+    // --- TELUGU NATIVE (25) ---
+    { "quote": "మా ఇంట్లో ఏ శుభకార్యం జరిగినా సరే, నగలు కొనాలంటే మా ఫస్ట్ ఛాయిస్ సాయి కిరణ్ వారే. ఆ నమ్మకం వేరబ్బా!", "author": "లక్ష్మి" },
+    { "quote": "గోల్డ్ క్వాలిటీ విషయంలో అస్సలు మొహమాట పడక్కర్లేదు. స్టాఫ్ కూడా చాలా మర్యాదగా చూస్తారు. మా విజయవాడలో బెస్ట్ షాప్ ఇది.", "author": "శ్రీనివాస్" },
+    { "quote": "డిజైన్లు చాలా వెరైటీగా ఉన్నాయి. బయట ఎక్కడా చూడని కొత్త మోడల్స్ ఇక్కడ దొరుకుతాయి. రేట్లు కూడా మన బడ్జెట్ లోనే ఉన్నాయి.", "author": "దివ్య" },
+    { "quote": "పారదర్శకత అంటే వీళ్ళదే. తూకం దగ్గర గానీ, మేకింగ్ చార్జీల దగ్గర గానీ అస్సలు మోసం ఉండదు. హాల్ మార్క్ నగలే ఇస్తారు.", "author": "కృష్ణ" },
+    { "quote": "మొన్న గాజులు కొన్నాను, ఫినిషింగ్ చాలా బాగుంది. మనం అడిగినట్టుగా కస్టమైజ్ చేసి ఇవ్వడం వీళ్ళ స్పెషాలిటీ.", "author": "స్వాతి" },
+    { "quote": "పెళ్ళి నగలు ఇక్కడే చేయించాము. ఒక్కో నగ ఒక్కో ఆభరణంలా కాకుండా ఒక కళాఖండంలా ఉంది. అందరూ చాలా మెచ్చుకున్నారు.", "author": "రామయ్య" },
+    { "quote": "నల్లపూసల గొలుసుల్లో ఇన్ని వెరైటీలు నేను ఎక్కడా చూడలేదు. కస్టమర్ ని రిసీవ్ చేసుకునే విధానం చాలా బాగుంటుంది.", "author": "కవిత" },
+    { "quote": "బంగారం స్వచ్ఛత గురించి మనకి ఏ టెన్షన్ ఉండదు. పక్కాగా 916 హాల్ మార్క్ ముద్ర ఉంటుంది. అందుకే ఇక్కడే కొంటాం.", "author": "రమేష్" },
+    { "quote": "పాత నగలు ఇచ్చి కొత్తవి తీసుకున్నాను. మార్పిడిలో కూడా చాలా మంచి వాల్యూ ఇచ్చారు. నాకు బాగా నచ్చింది.", "author": "సరస్వతి" },
+    { "quote": "పిల్లల కోసం లైట్ వెయిట్ నగలు చాలా బాగున్నాయి. రోజువారీ వాడుకోవడానికి ఇవి పర్ఫెక్ట్ గా సరిపోతాయి.", "author": "స్నేహ" },
+    { "quote": "స్టాఫ్ కి ఓపిక ఎక్కువండి. మనకి నచ్చే వరకు ఎన్ని మోడల్స్ అయినా విసుగు లేకుండా చూపిస్తారు.", "author": "మోహన్" },
+    { "quote": "మా ఫ్యామిలీ అంతా లాస్ట్ 15 ఏళ్లుగా ఇక్కడే కొంటున్నాము. నమ్మకానికి మరో పేరు సాయి కిరణ్ జ్యుయలరీస్.", "author": "కోటేశ్వరరావు" },
+    { "quote": "పండగ సీజన్ లో కొత్త కలెక్షన్ అదిరిపోతుంది. ఆఫర్లు కూడా చాలా జెన్యూన్ గా ఉంటాయి.", "author": "భారతి" },
+    { "quote": "షోరూమ్ వాతావరణం చాలా ప్రశాంతంగా ఉంటుంది. ఏసీ షోరూమ్ అవ్వడం వల్ల హాయిగా షాపింగ్ చేసుకోవచ్చు.", "author": "సత్య" },
+    { "quote": "యాంటిక్ నగలు కావాలంటే ఇక్కడికి వెళ్లాల్సిందే. ఆ డిజైన్లు చాలా ట్రెడిషనల్ గా, గ్రాండ్ గా ఉంటాయి.", "author": "సంధ్య" },
+    { "quote": "డైమండ్ నగల ఫినిషింగ్ చాలా నీట్ గా ఉంది. క్వాలిటీ సర్టిఫికెట్ కూడా ఇస్తారు కాబట్టి నమ్మకంగా ఉండొచ్చు.", "author": "హారిక" },
+    { "quote": "చిన్న ముక్క కొన్నా సరే, పెద్ద కస్టమర్ కి ఇచ్చే వాల్యూ ఇస్తారు. అందుకే ఈ షాపు అంటే నాకు ఇష్టం.", "author": "రాము" },
+    { "quote": "బంగారు బిస్కెట్లు, కాయిన్లు ఇన్వెస్ట్ మెంట్ కి ఇక్కడ కొనడం బెస్ట్. తూకం పక్కాగా ఉంటుంది.", "author": "వెంకట్" },
+    { "quote": "పటమట ఏరియాలో నగలు కొనడానికి నెంబర్ వన్ ప్లేస్. సర్వీస్ లో ఎక్కడా రాజీ పడరు.", "author": "ప్రసాద్" },
+    { "quote": "మా ఆవిడకి సర్ ప్రైజ్ గిఫ్ట్ ఇవ్వడానికి రింగ్ కొన్నాను. ఆ డిజైన్ చూసి తను చాలా హ్యాపీగా ఫీలయ్యింది.", "author": "రవి" },
+    { "quote": "బిజినెస్ లో నిజాయితీ ఉంటుంది. ప్రతి రూపాయికి విలువ దక్కుతుందని గ్యారెంటీ ఇవ్వగలను.", "author": "బ్రహ్మయ్య" },
+    { "quote": "నగలు కొన్న తర్వాత కూడా పాలిషింగ్ లాంటి సర్వీసులు చాలా బాగా చేస్తారు. ఎప్పుడూ కొత్త నగల్లానే ఉంటాయి.", "author": "మమత" },
+    { "quote": "టెంపుల్ జ్యుయలరీ కలెక్షన్ చాలా రిచ్ గా ఉంది. మన సంప్రదాయం ఉట్టిపడేలా ఉంటాయి నగలు.", "author": "వసుధ" },
+    { "quote": "విజయవాడలో ఇంత పారదర్శకమైన బిల్లింగ్ నేను ఎక్కడా చూడలేదు. వేస్టేజ్ విషయంలో కూడా చాలా రీజనబుల్.", "author": "నరేష్" },
+    { "quote": "నమ్మకమైన నగలు, నవ్వుతూ పలకరించే స్టాఫ్. ఇంతకంటే ఇంకేం కావాలి మనకి?", "author": "పద్మ" },
 
+    // --- ENGLISH NATIVE (25) ---
+    { "quote": "Value for money and 100% purity. My mother only trusts Sai Kiran for her gold savings.", "author": "Anil" },
+    { "quote": "The harams are simply superb! The finishing is very clean and the designs are quite unique.", "author": "Dhanu" },
+    { "quote": "Proper hallmarking and genuine rates. No confusion in billing at all. Highly satisfied.", "author": "Sanjay Bulla" },
+    { "quote": "I got my ear studs customized here. Exactly as per the photo I showed, they made it. Superb work.", "author": "Priyanka" },
+    { "quote": "A very old and trusted shop in Vijayawada. They treat every customer with a lot of respect.", "author": "David" },
+    { "quote": "The bridal set I bought here is the highlight of my wedding. Everyone was asking about the design.", "author": "Anjali" },
+    { "quote": "Transparent pricing with no hidden charges. They explain every detail clearly before billing.", "author": "Kiran Kumar" },
+    { "quote": "Best collection for daily wear items. Very lightweight and trendy designs for office goers.", "author": "Deepika" },
+    { "quote": "Compared to big showrooms, the making charges here are very reasonable. Quality is top notch.", "author": "Suresh" },
+    { "quote": "The staff is very patient. They showed me nearly 20 chains without any hesitation. Good service.", "author": "Vikram" },
+    { "quote": "They give the best exchange rate for old gold. Very honest people to deal with.", "author": "Rajesh" },
+    { "quote": "I love the ambiance of the showroom. Very comfortable shopping experience in Patamata.", "author": "Radhika" },
+    { "quote": "Quality and Trust—that's what Sai Kiran is known for. My family's favorite shop for 10 years.", "author": "Naveen" },
+    { "quote": "Stunning collection of bangles. The weight and purity are always accurate. No doubts at all.", "author": "Pallavi" },
+    { "quote": "The gold coin purity is perfect for long-term investment. They provide proper bills and certificates.", "author": "Venkat" },
+    { "quote": "Customization is their strength. They made a beautiful necklace from my old gold bangles.", "author": "Gautami" },
+    { "quote": "Very hygienic and safe store. The staff follows all protocols properly. Safe place to visit.", "author": "Sandhya Reddy" },
+    { "quote": "Impressed with the traditional temple jewelry designs. Truly captures our culture beautifully.", "author": "Abhishek" },
+    { "quote": "The owner and staff are very down-to-earth. They guide us well on gold rates and purity.", "author": "Manohar" },
+    { "quote": "I found exactly what I was looking for. Huge variety in every segment, especially in jhumkas.", "author": "Meghana" },
+    { "quote": "A perfect place to buy engagement rings. They have very classy and modern designs.", "author": "Siddharth" },
+    { "quote": "The billing process is very fast and they are very professional in their approach.", "author": "Arun" },
+    { "quote": "If you want hallmark gold in Vijayawada, just go to Sai Kiran. You won't regret it.", "author": "John" },
+    { "quote": "The jewelry box packaging is also very premium. Great for gifting purposes.", "author": "Tanmayi" },
+    { "quote": "Truly a 5-star experience. Will definitely recommend to all my relatives and friends.", "author": "Ramadevi" }
+];
         let currentTestimonial = 0;
-        let testimonialInterval;
+let testimonialInterval;
+let dailyTestimonials = [];
 
-        function renderTestimonials() {
-            const container = document.getElementById('testimonials-wrapper');
+function getDailyTestimonials() {
+    // Seeded shuffle using day-of-year as seed
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const dayOfYear = Math.floor((now - start) / 86400000);
+    const isEven = dayOfYear % 2 === 0;
 
-            container.innerHTML = testimonials.map((t, i) => {
-                // Random rating: either 4.5 or 5
-                const rating = Math.random() < 0.5 ? 4.5 : 5;
-                const full = Math.floor(rating);
-                const half = (rating - full) === 0.5;
-                let stars = '';
-                for (let s = 0; s < full; s++) stars += '<i class="fa-solid fa-star"></i>';
-                if (half) stars += '<i class="fa-solid fa-star-half-stroke"></i>';
+    // Split into Telugu (first 25) and English (last 25)
+    const teluguPool = testimonials.slice(0, 25);
+    const englishPool = testimonials.slice(25, 50);
 
-                return `
-            <div class="testimonial-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
-                <i class="fa-solid fa-quote-left text-4xl text-amber-200 mb-6"></i>
-                <p class="text-lg md:text-xl italic text-gray-600 mb-6 max-w-3xl mx-auto">"${t.quote}"</p>
-                <h5 class="font-bold text-emerald-950">- ${t.author}</h5>
-                <div class="text-amber-500 mt-2 text-lg">${stars}</div>
-            </div>
-        `;
-            }).join('');
+    // Seeded pseudo-random function
+    function seededShuffle(arr, seed) {
+        const a = [...arr];
+        let s = seed;
+        for (let i = a.length - 1; i > 0; i--) {
+            s = (s * 1664525 + 1013904223) & 0xffffffff;
+            const j = Math.abs(s) % (i + 1);
+            [a[i], a[j]] = [a[j], a[i]];
         }
+        return a;
+    }
+
+    const shuffledTelugu  = seededShuffle(teluguPool,  dayOfYear * 7);
+    const shuffledEnglish = seededShuffle(englishPool, dayOfYear * 13);
+
+    // Even day: 6 Telugu + 4 English; Odd day: 6 English + 4 Telugu
+    const teluguCount  = isEven ? 6 : 4;
+    const englishCount = isEven ? 4 : 6;
+    const teluguPick   = shuffledTelugu.slice(0, teluguCount).map(t => ({ ...t, lang: 'te' }));
+    const englishPick  = shuffledEnglish.slice(0, englishCount).map(t => ({ ...t, lang: 'en' }));
+
+    // Interleave to avoid language clustering
+    const interleaved = [];
+    const tArr = [...teluguPick];
+    const eArr = [...englishPick];
+    if (isEven) {
+        // Pattern: te,te,en,te,en,te,en,te,en,te
+        const pattern = ['te','te','en','te','en','te','en','te','en','te'];
+        pattern.forEach(lang => {
+            if (lang === 'te' && tArr.length) interleaved.push(tArr.shift());
+            else if (lang === 'en' && eArr.length) interleaved.push(eArr.shift());
+        });
+    } else {
+        // Pattern: en,en,te,en,te,en,te,en,te,en
+        const pattern = ['en','en','te','en','te','en','te','en','te','en'];
+        pattern.forEach(lang => {
+            if (lang === 'en' && eArr.length) interleaved.push(eArr.shift());
+            else if (lang === 'te' && tArr.length) interleaved.push(tArr.shift());
+        });
+    }
+    // Fill any remainder
+    while (tArr.length) interleaved.push(tArr.shift());
+    while (eArr.length) interleaved.push(eArr.shift());
+
+    return interleaved;
+}
+
+function renderTestimonials() {
+    dailyTestimonials = getDailyTestimonials();
+    const container = document.getElementById('testimonials-wrapper');
+
+    // Fixed ratings per day (seeded) so stars don't change on re-render
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const dayOfYear = Math.floor((now - start) / 86400000);
+
+    container.innerHTML = dailyTestimonials.map((t, i) => {
+        const ratingSeed = (dayOfYear * 31 + i * 17) % 2;
+        const rating = ratingSeed === 0 ? 5 : 4.5;
+        const full = Math.floor(rating);
+        const half = (rating - full) === 0.5;
+        let stars = '';
+        for (let s = 0; s < full; s++) stars += '<i class="fa-solid fa-star"></i>';
+        if (half) stars += '<i class="fa-solid fa-star-half-stroke"></i>';
+
+        return `
+    <div class="testimonial-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+        <i class="fa-solid fa-quote-left text-4xl text-amber-200 mb-6"></i>
+        <p class="text-lg md:text-xl italic text-gray-600 mb-6 max-w-3xl mx-auto">"${t.quote}"</p>
+        <h5 class="font-bold text-emerald-950">- ${t.author}</h5>
+        <div class="text-amber-500 mt-2 text-lg">${stars}</div>
+    </div>
+`;
+    }).join('');
+}
 
 
-        function showTestimonial(index) {
-            const slides = document.querySelectorAll('.testimonial-slide');
-            slides.forEach((slide, i) => {
-                if (i === index) {
-                    slide.classList.add('active');
-                } else {
-                    slide.classList.remove('active');
-                }
-            });
-            currentTestimonial = index;
+function showTestimonial(index) {
+    const slides = document.querySelectorAll('.testimonial-slide');
+    slides.forEach((slide, i) => {
+        if (i === index) {
+            slide.classList.add('active');
+        } else {
+            slide.classList.remove('active');
         }
+    });
+    currentTestimonial = index;
+}
 
-        function changeTestimonial(direction) {
-            clearInterval(testimonialInterval); // Stop auto on manual interaction
-            let newIndex = currentTestimonial + direction;
-            if (newIndex < 0) newIndex = testimonials.length - 1;
-            if (newIndex >= testimonials.length) newIndex = 0;
-            showTestimonial(newIndex);
-            startTestimonialAuto(); // Restart auto
-        }
+function changeTestimonial(direction) {
+    clearInterval(testimonialInterval); // Stop auto on manual interaction
+    let newIndex = currentTestimonial + direction;
+    if (newIndex < 0) newIndex = dailyTestimonials.length - 1;
+    if (newIndex >= dailyTestimonials.length) newIndex = 0;
+    showTestimonial(newIndex);
+    startTestimonialAuto(); // Restart auto
+}
 
-        function startTestimonialAuto() {
-            clearInterval(testimonialInterval);
-            testimonialInterval = setInterval(() => {
-                let newIndex = currentTestimonial + 1;
-                if (newIndex >= testimonials.length) newIndex = 0;
-                showTestimonial(newIndex);
-            }, 20000); // 20 seconds
-        }
+function startTestimonialAuto() {
+    clearInterval(testimonialInterval);
+    testimonialInterval = setInterval(() => {
+        let newIndex = currentTestimonial + 1;
+        if (newIndex >= dailyTestimonials.length) newIndex = 0;
+        showTestimonial(newIndex);
+    }, 20000); // 20 seconds
+}
 
         // Expose all onclick-referenced functions to global scope
         window.changeTestimonial    = changeTestimonial;
@@ -1991,18 +2259,36 @@ localStorage.removeItem('wishlist');
         window.toggleWishlist       = toggleWishlist;
         window.togglePopupWishlist  = togglePopupWishlist;
         window.changePopImg         = changePopImg;
-        window.zoomPopupImage       = typeof zoomPopupImage === 'function' ? zoomPopupImage : function(){};
+        window.zoomPopupImage       = function(){};  // legacy no-op
+window.popupZoomIn          = popupZoomIn;
+window.popupZoomOut         = popupZoomOut;
+        window.handleWishlistClick  = handleWishlistClick;
         window.updateCartQty        = window.updateCartQty || function(){};
 
         // Single merged DOMContentLoaded — only one, prevents double-init conflicts
-        document.addEventListener('DOMContentLoaded', () => {
-            renderCategories();
-            renderTestimonials();
-            startTestimonialAuto();
-            updateCartItemsList();
-            updateWishlistUI();
-            setTimeout(renderTrending, 400);
-        });
+document.addEventListener('DOMContentLoaded', () => {
+    renderCategories();
+    renderTestimonials();
+    startTestimonialAuto();
+    updateCartItemsList();
+    updateWishlistUI();
+    setTimeout(renderTrending, 400);
+});
+
+// Cross-page sync: re-render trending when cart/wishlist changes in another tab/page
+window.addEventListener('storage', (e) => {
+    if (e.key === 'cart') {
+        try { cart = JSON.parse(e.newValue || '{}'); } catch(err) { cart = {}; }
+        updateCartUI();
+        updateCartItemsList();
+        renderTrending();
+    }
+    if (e.key === 'wishlist') {
+        try { wishlist = JSON.parse(e.newValue || '[]'); } catch(err) { wishlist = []; }
+        updateWishlistUI();
+        renderTrending();
+    }
+});
         // Product popup functions
 
         let currentPopId = '';
@@ -2029,11 +2315,22 @@ localStorage.removeItem('wishlist');
                 : (image || 'https://via.placeholder.com/800x800?text=No+Image');
 
             document.getElementById('pop-img').src = mainImage;
-            document.getElementById('pop-img').classList.remove('zoomed');
+document.getElementById('pop-img').classList.remove('zoomed');
+_pzReset();
+// Sync minimap image
+const _mm = document.getElementById('pop-minimap-img');
+if (_mm) _mm.src = mainImage;
             document.getElementById('pop-title').innerText = name || currentPopProduct.name || 'Product';
             document.getElementById('pop-price').innerText = '₹' + offerPrice.toLocaleString();
             document.getElementById('pop-old-price').innerText = originalPrice > offerPrice ? '₹' + originalPrice.toLocaleString() : '';
-            document.getElementById('pop-discount-label').innerText = discount > 0 ? discount + '% OFF' : '';
+            const _discLabel = document.getElementById('pop-discount-label');
+if (parseFloat(discount) > 0) {
+    _discLabel.innerText = parseFloat(discount) + '% OFF';
+    _discLabel.style.display = '';
+} else {
+    _discLabel.innerText = '';
+    _discLabel.style.display = 'none';
+}
 
             // Update weight display if available
             const weightDisplay = document.querySelector('#item-popup .space-y-2 p:nth-child(2) span.font-bold');
@@ -2063,12 +2360,129 @@ localStorage.removeItem('wishlist');
             document.body.style.overflow = '';
         }
 
-        function zoomPopupImage() {
-            const imgElement = document.getElementById('pop-img');
-            imgElement.classList.toggle('zoomed');
-        }
+// ═══════════════════════════════════════════════════
+// PROFESSIONAL POPUP ZOOM — index.html
+// ═══════════════════════════════════════════════════
+let _pzCount   = 0;          // 0–5 presses
+const _PZ_MAX  = 5;
+const _PZ_STEP = 0.5;        // scale = 1 + count*0.5  → max 3.5×
+let _pzOffX    = 0, _pzOffY = 0;
+let _pzDragging = false;
+let _pzDragStartX = 0, _pzDragStartY = 0;
 
-        function togglePopupWishlist(id) {
+function _pzScale()  { return 1 + _pzCount * _PZ_STEP; }
+
+function _pzApply() {
+    const img = document.getElementById('pop-img');
+    if (!img) return;
+    const s = _pzScale();
+    img.style.transform = `scale(${s}) translate(${_pzOffX / s}px, ${_pzOffY / s}px)`;
+    _pzUpdateMinimap();
+}
+
+function _pzUpdateBtns() {
+    const bi = document.getElementById('pop-zoom-in');
+    const bo = document.getElementById('pop-zoom-out');
+    if (bi) bi.disabled  = _pzCount >= _PZ_MAX;
+    if (bo) bo.disabled  = _pzCount <= 0;
+}
+
+function _pzUpdateMinimap() {
+    const wrap = document.getElementById('pop-minimap-wrap');
+    const vp   = document.getElementById('pop-minimap-viewport');
+    if (!wrap || !vp) return;
+
+    if (_pzCount === 0) {
+        wrap.classList.remove('visible');
+        return;
+    }
+    wrap.classList.add('visible');
+
+    const s      = _pzScale();
+    const vpW    = 80 / s;   // viewport rect width in minimap px
+    const vpH    = 80 / s;
+    // Centre of view in full-image coords (minimap is 80×80)
+    const centreX = 40 - (_pzOffX / s) * (80 / (80 * s));
+    const centreY = 40 - (_pzOffY / s) * (80 / (80 * s));
+    const left   = Math.max(0, centreX - vpW / 2);
+    const top    = Math.max(0, centreY - vpH / 2);
+    vp.style.width  = vpW  + 'px';
+    vp.style.height = vpH  + 'px';
+    vp.style.left   = left + 'px';
+    vp.style.top    = top  + 'px';
+}
+
+function _pzReset() {
+    _pzCount = 0; _pzOffX = 0; _pzOffY = 0;
+    const img  = document.getElementById('pop-img');
+    const wrap = document.getElementById('pop-minimap-wrap');
+    if (img)  { img.style.transform = ''; img.classList.remove('is-zoomed','is-dragging','zoomed'); }
+    if (wrap) wrap.classList.remove('visible');
+    _pzUpdateBtns();
+}
+
+function popupZoomIn() {
+    if (_pzCount >= _PZ_MAX) return;
+    _pzCount++;
+    const img = document.getElementById('pop-img');
+    if (img) img.classList.add('is-zoomed');
+    _pzApply(); _pzUpdateBtns();
+}
+
+function popupZoomOut() {
+    if (_pzCount <= 0) return;
+    _pzCount--;
+    if (_pzCount === 0) { _pzOffX = 0; _pzOffY = 0; }
+    _pzApply(); _pzUpdateBtns();
+    const img = document.getElementById('pop-img');
+    if (_pzCount === 0 && img) img.classList.remove('is-zoomed');
+}
+
+// ── Mouse drag ──
+document.addEventListener('mousedown', (e) => {
+    const img = document.getElementById('pop-img');
+    if (!img || _pzCount === 0 || !e.target.isSameNode(img)) return;
+    _pzDragging    = true;
+    _pzDragStartX  = e.clientX - _pzOffX;
+    _pzDragStartY  = e.clientY - _pzOffY;
+    img.classList.add('is-dragging');
+    e.preventDefault();
+});
+document.addEventListener('mousemove', (e) => {
+    if (!_pzDragging) return;
+    const s      = _pzScale();
+    const maxOff = 120 * (_pzCount / _PZ_MAX);
+    _pzOffX = Math.max(-maxOff, Math.min(maxOff, e.clientX - _pzDragStartX));
+    _pzOffY = Math.max(-maxOff, Math.min(maxOff, e.clientY - _pzDragStartY));
+    _pzApply();
+    e.preventDefault();
+});
+document.addEventListener('mouseup', () => {
+    if (!_pzDragging) return;
+    _pzDragging = false;
+    const img = document.getElementById('pop-img');
+    if (img) img.classList.remove('is-dragging');
+});
+
+// ── Touch drag ──
+let _pzTouchX = 0, _pzTouchY = 0;
+document.addEventListener('touchstart', (e) => {
+    const img = document.getElementById('pop-img');
+    if (!img || _pzCount === 0 || !e.target.isSameNode(img)) return;
+    _pzTouchX = e.touches[0].clientX - _pzOffX;
+    _pzTouchY = e.touches[0].clientY - _pzOffY;
+}, { passive: true });
+document.addEventListener('touchmove', (e) => {
+    const img = document.getElementById('pop-img');
+    if (!img || _pzCount === 0 || !e.target.isSameNode(img)) return;
+    const maxOff = 120 * (_pzCount / _PZ_MAX);
+    _pzOffX = Math.max(-maxOff, Math.min(maxOff, e.touches[0].clientX - _pzTouchX));
+    _pzOffY = Math.max(-maxOff, Math.min(maxOff, e.touches[0].clientY - _pzTouchY));
+    _pzApply();
+}, { passive: true });
+
+function zoomPopupImage() {} // legacy stub
+       /* function togglePopupWishlist(id) {
             const btn = document.querySelector('.popup-heart-btn');
             if (!btn) return;
 
@@ -2114,8 +2528,10 @@ localStorage.removeItem('wishlist');
             // Update the trending card heart UI to sync with popup
             updateTrendingCardHeart(id, idx < 0); // idx < 0 means it was added (now in wishlist)
         }
+*/
+        
 
-        // Helper function to update trending card heart
+// Helper function to update trending card heart
         function updateTrendingCardHeart(id, isWishlisted) {
             const cardWrapper = document.querySelector(`[data-item-id="${id}"]`);
             if (cardWrapper) {
@@ -2251,6 +2667,21 @@ localStorage.removeItem('wishlist');
                     icon.classList.add('fa-regular');
                     icon.style.color = '#ffffff';
                 }
+
+                // Also sync the popup heart if this product's popup is open
+    if (document.getElementById('item-popup').classList.contains('active') && currentPopId === id) {
+        const popupHeartBtn = document.querySelector('.popup-heart-btn');
+        const isW = wishlist.some(w => w.id === id);
+        if (popupHeartBtn) {
+            const pi = popupHeartBtn.querySelector('i');
+            popupHeartBtn.classList.toggle('active', isW);
+            if (pi) {
+                pi.classList.toggle('fa-solid', isW);
+                pi.classList.toggle('fa-regular', !isW);
+                pi.style.color = isW ? '#ef4444' : '#ffffff';
+            }
+        }
+    }
             });
         }
 
@@ -2523,7 +2954,21 @@ localStorage.removeItem('wishlist');
                 updatePopupButton(id, price, newQty > 0 ? newQty : 0, originalPrice);
             }
         }
+  
 
+        function _doAddToCartWithAnim(id, price, originalPrice, name) {
+    const btn = document.getElementById('atc-' + id);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Added ✓';
+        btn.style.background = '#059669';
+        setTimeout(() => {
+            updateCartQty(id, 1, price, originalPrice, name);
+        }, 500);
+    } else {
+        updateCartQty(id, 1, price, originalPrice, name);
+    }
+}
 
 
         // Helper to update trending card UI
@@ -2544,8 +2989,8 @@ localStorage.removeItem('wishlist');
                 </div>
             `;
                 } else {
-                    btnDiv.innerHTML = `<button onclick="event.stopPropagation(); updateCartQty('${id}', 1, ${price}, ${originalPrice}, '${name.replace(/'/g, "\\'")}');">Add to Cart</button>`;
-                }
+    btnDiv.innerHTML = `<button id="atc-${id}" onclick="event.stopPropagation(); _doAddToCartWithAnim('${id}', ${price}, ${originalPrice}, '${name.replace(/'/g, "\\'")}');">Add to Cart</button>`;
+}
             });
         }
         function openOrderPopup() {
@@ -2923,5 +3368,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </body>
+
 
 </html>

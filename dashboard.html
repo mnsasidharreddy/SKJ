@@ -414,9 +414,11 @@
                                 .where('updatedAt', '>=', firebase.firestore.Timestamp.fromDate(today))
                                 .get();
                             count = snap.size;
-                        } catch {
-                            // If priceHistory doesn't exist or timestamp fails,
-                            // check prices/current doc's updatedAt instead
+                        } catch {}
+
+                        // Always check prices/current when priceHistory returns 0
+                        // (priceHistory may not exist — query returns 0, not an error)
+                        if (count === 0) {
                             try {
                                 const priceDoc = await db.collection('prices').doc('current').get();
                                 if (priceDoc.exists) {
@@ -424,7 +426,7 @@
                                     const updatedDate = updatedAt?.toDate ? updatedAt.toDate() : new Date(updatedAt);
                                     count = updatedDate >= today ? 1 : 0;
                                 }
-                            } catch { count = 0; }
+                            } catch {}
                         }
                         el2.textContent = count.toLocaleString();
                     } catch {
