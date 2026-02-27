@@ -1120,7 +1120,7 @@
 (function() {
     let carouselPendingTimer = null;
 
-    function applyCarouselImages(images) {
+    /*function applyCarouselImages(images) {
     const inner = document.getElementById('heroCarouselInner');
     if (!inner || !images.length) return;
 
@@ -1143,6 +1143,52 @@
             im.src = img.url;
             im.className = 'carousel-img-fixed d-block';
             im.alt = 'Banner ' + (idx + 1);
+            div.appendChild(im);
+            inner.appendChild(div);
+        });*/
+    function applyCarouselImages(images) {
+    const inner = document.getElementById('heroCarouselInner');
+    if (!inner || !images.length) return;
+
+    // 🚀 1️⃣ Preload FIRST image immediately (instant hero)
+    const firstPreload = new Image();
+    firstPreload.src = images[0].url;
+
+    // 📦 2️⃣ Preload remaining images in background (cache them)
+    images.slice(1).forEach(img => {
+        const preload = new Image();
+        preload.src = img.url;
+    });
+
+    const carouselEl = document.getElementById('heroCarousel');
+
+    function _initBootstrapCarousel() {
+        if (window.bootstrap && carouselEl) {
+            const existing = bootstrap.Carousel.getInstance(carouselEl);
+            if (existing) existing.dispose();
+            new bootstrap.Carousel(carouselEl, { interval: 5000, ride: 'carousel' });
+        }
+    }
+
+    function _buildCarousel() {
+        inner.innerHTML = '';
+
+        images.forEach((img, idx) => {
+            const div = document.createElement('div');
+            div.className = 'carousel-item' + (idx === 0 ? ' active' : '');
+
+            const im = document.createElement('img');
+            im.src = img.url;
+            im.className = 'carousel-img-fixed d-block';
+            im.alt = 'Banner ' + (idx + 1);
+
+            // 🎯 Make first image highest priority
+            if (idx === 0) {
+                im.setAttribute('fetchpriority', 'high');
+            } else {
+                im.setAttribute('loading', 'lazy');
+            }
+
             div.appendChild(im);
             inner.appendChild(div);
         });
@@ -3371,3 +3417,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </html>
+
