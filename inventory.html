@@ -2670,9 +2670,40 @@
                 console.error('Logout error:', error);
             }
         };
+        // ============================================
+// EMERGENCY LOADING SCREEN TIMEOUT
+// ============================================
+setTimeout(() => {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+        console.error("⏰ Loading timeout - Firebase may have failed to initialize");
+        loadingScreen.classList.add('hidden');
+        
+        // Show error message to user
+        const body = document.body;
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fee2e2;color:#dc2626;padding:16px 24px;border-radius:8px;z-index:9999;font-family:sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.15);';
+        errorDiv.innerHTML = '<strong>Connection Error:</strong> Could not connect to database. Check console (F12) for details.';
+        body.appendChild(errorDiv);
+    }
+}, 8000); // 8 second timeout
+        // Debug: Check if Firebase loaded
+console.log("✅ Script loaded");
+console.log("Auth:", auth);
+console.log("DB:", db);
+console.log("Storage:", storage);
+
+// Test if we can even reach Firebase
+try {
+    const testRef = doc(db, 'test', 'test');
+    console.log("✅ Firestore reference created:", testRef);
+} catch(e) {
+    console.error("❌ Firestore failed:", e);
+}
     </script>
 </body>
 
 </html>
+
 
 
