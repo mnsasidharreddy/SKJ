@@ -866,21 +866,28 @@ return `
         }
         
         // Toggle wishlist and remove from display
-        function toggleWishlistWithRemove(id, btnElement) {
+        async function toggleWishlistWithRemove(id, btnElement) {
             const card = btnElement.closest('.product-card');
-            
+
             // Animate removal
             if (card) {
                 card.classList.add('fade-out');
-                setTimeout(() => {
+                setTimeout(async () => {
                     // Remove from wishlist array
                     wishlist = wishlist.filter(w => w.id !== id);
                     localStorage.setItem('wishlist', JSON.stringify(wishlist));
-                    
+
+                    // Save to Firebase so removal persists after refresh
+                    try {
+                        await saveUserCartAndWishlist();
+                    } catch(e) {
+                        console.warn('Could not sync wishlist removal to Firebase:', e.message);
+                    }
+
                     // Update UI
                     updateWishlistUI();
                     updateWishlistCount();
-                    
+
                     // Re-render
                     if (wishlist.length === 0) {
                         renderWishlistPage();
