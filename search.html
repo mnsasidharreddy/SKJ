@@ -421,13 +421,17 @@
         const db = firebase.firestore();
         const q  = query.trim().toLowerCase();
 
+        // Helper: filter out inactive/deleted/hidden products (same rules as category pages)
+        const isVisible = p => p.isActive !== false && p.onlineEnabled !== false && p.inStock === true;
+
         // Category match → fetch entire category
         if (CATEGORIES.includes(q)) {
             const snap = await db.collection('products')
                 .where('category', '==', q)
+                .where('isActive', '==', true)
                 .where('inStock', '==', true)
                 .get();
-            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(isVisible);
         }
 
         // Name prefix search using nameLower field
@@ -439,7 +443,7 @@
             .where('inStock', '==', true)
             .get();
 
-        const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const results = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(isVisible);
 
         // Also try category contains (if user typed partial category like "brac")
         const matchedCats = CATEGORIES.filter(c => c.startsWith(q));
@@ -448,6 +452,7 @@
                 matchedCats.map(cat =>
                     db.collection('products')
                         .where('category', '==', cat)
+                        .where('isActive', '==', true)
                         .where('inStock', '==', true)
                         .get()
                 )
@@ -455,7 +460,8 @@
             for (const s of catSnaps) {
                 for (const d of s.docs) {
                     if (!results.find(r => r.id === d.id)) {
-                        results.push({ id: d.id, ...d.data() });
+                        const p = { id: d.id, ...d.data() };
+                        if (isVisible(p)) results.push(p);
                     }
                 }
             }

@@ -3,8 +3,25 @@
 
 <head>
     <meta charset="UTF-8">
+    <title>Gold & Silver Jewellery in Vijayawada | Sai Kiran Jewelleries A/C Showroom</title>
+    <meta name="description" content="Sai Kiran Jewelleries A/C Showroom in Vijayawada offers premium gold, silver, bridal and custom-designed jewellery. Rings, chains, necklaces, harams, bangles, bracelets, coins & more.">
+    <meta name="keywords" content="Gold Jewellery Vijayawada, Silver Jewellery Vijayawada, Bridal Jewellery Vijayawada, Sai Kiran Jewelleries, SKJ Vijayawada, Gold Rings, Gold Chains, Harams, Bangles">
+    <meta name="author" content="Sai Kiran Jewelleries">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.saikiranjewelleries.in/">
+    <meta property="og:title" content="Gold & Silver Jewellery in Vijayawada | Sai Kiran Jewelleries A/C Showroom">
+    <meta property="og:description" content="Premium gold, silver & bridal jewellery showroom in Vijayawada. Custom designs & exclusive collections available.">
+    <meta property="og:image" content="https://www.saikiranjewelleries.in/images/cover1.webp">
+    <meta property="og:url" content="https://www.saikiranjewelleries.in/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sai Kiran Jewelleries Vijayawada">
+    <meta name="twitter:description" content="Premium gold & silver jewellery showroom in Vijayawada.">
+    <meta name="twitter:image" content="https://www.saikiranjewelleries.in/images/cover1.webp">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"JewelryStore","name":"Sai Kiran Jewelleries A/C Showroom","image":"https://www.saikiranjewelleries.in/images/cover1.webp","url":"https://www.saikiranjewelleries.in","telephone":"+91 97053 73804","address":{"@type":"PostalAddress","streetAddress":"71-1-17, Opp RR Chicken, Canara Bank Rd, JD Nagar, Patamata","addressLocality":"Vijayawada","addressRegion":"Andhra Pradesh","postalCode":"520010","addressCountry":"IN"},"areaServed":"Vijayawada","priceRange":"₹₹₹"}
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKJ | Sai Kiran Jewelleries</title>
     <link rel="icon" type="image/png" href="./images/transparent.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
@@ -1724,12 +1741,11 @@ hasDiscount = discountAmt > 0;
                         </div>`;
                 });
 
-                // ── CRITICAL: save single-set HTML before applyTrendingLayout duplicates it ──
+                // ── CRITICAL: save single-set HTML; let applyTrendingLayout render it directly
+                // Do NOT set container.innerHTML here — that would briefly show cards
+                // in default block layout (full width) before applyTrendingLayout runs.
                 container._singleSetHTML = html;
-                container.innerHTML = html;
-
-                // Give DOM a tick to paint cards so offsetWidth is measurable
-                setTimeout(applyTrendingLayout, 150);
+                applyTrendingLayout();
 
             }, (error) => {
                 console.error('Trending snapshot error:', error);

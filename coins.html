@@ -2,8 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Gold Coins Vijayawada | Sai Kiran Jewelleries</title>
+    <meta name="description" content="Buy pure gold coins at Sai Kiran Jewelleries Vijayawada. Investment gold coins, Lakshmi coins, 24K pure gold bullion with certified purity.">
+    <meta name="keywords" content="Gold Coins Vijayawada, Buy Gold Coins, Gold Bullion, Lakshmi Gold Coin, 24K Gold Coin Investment">
+    <meta name="author" content="Sai Kiran Jewelleries">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.saikiranjewelleries.in/coins.html">
+    <meta property="og:title" content="Gold Coins Vijayawada | Sai Kiran Jewelleries">
+    <meta property="og:description" content="Buy pure gold coins in Vijayawada. Investment coins, Lakshmi coins & 24K gold bullion.">
+    <meta property="og:image" content="https://www.saikiranjewelleries.in/images/cover1.webp">
+    <meta property="og:url" content="https://www.saikiranjewelleries.in/coins.html">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gold Coins Vijayawada | Sai Kiran Jewelleries">
+    <meta name="twitter:description" content="Buy pure gold coins in Vijayawada.">
+    <meta name="twitter:image" content="https://www.saikiranjewelleries.in/images/cover1.webp">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Coins | SKJ Jewelleries</title>
     <link rel="icon" type="image/png" href="./images/Screenshot_12-2-2026_195823_localhost.jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
@@ -633,7 +647,7 @@
             }
 
             .product-image-main img{
-                max-height: 20% !important;
+                max-height: 100% !important;
             }
         }
     </style>
@@ -1237,7 +1251,18 @@ function generateFallbackProducts() {
             
             document.getElementById('popup-title').innerText = productName;
             document.getElementById('popup-weight').innerText = `~${weight} Grams`;
-            
+
+            // Set purity from Firebase product data
+            const purityEl = document.getElementById('popup-purity');
+            if (purityEl) {
+                const metal = (product && product.metalType) || 'gold';
+                const carat = (product && product.carat) || '22CT';
+                let purity = '22K / 916 Hallmark';
+                if (metal === 'silver') purity = '999 Silver / BIS Hallmark';
+                else if (carat === '24CT') purity = '24K Pure Gold';
+                purityEl.textContent = purity;
+            }
+
             // Handle price display
             const hasDiscount = original > price && discount > 0;
             const popupOriginal = document.getElementById('popup-original');
@@ -1590,7 +1615,7 @@ window.panelLogout = async function() {
                 <div class="popup-specs">
                     <div>
                         <div class="popup-specs-label">Purity</div>
-                        <div class="popup-specs-value">22K / 916 Hallmark</div>
+                        <div class="popup-specs-value" id="popup-purity">22K / 916 Hallmark</div>
                     </div>
                     <div>
                         <div class="popup-specs-label">Gross Weight</div>

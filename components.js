@@ -81,7 +81,7 @@ const siteHeader = `
             </a>
             <div class="relative cursor-pointer nav-icon-btn" onclick="toggleCart()">
                 <i class="fa-solid fa-bag-shopping text-white cart-icon"></i>
-                <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] rounded-full h-5 w-5 items-center justify-center font-bold" style="display:none">0</span>
+                <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold" style="display:none">0</span>
             </div>
             <div class="login-icon relative cursor-pointer nav-icon-btn" onclick="toggleLoginPanel()">
                 <i class="fa-solid fa-user cart-icon" style="color:#D4AF37;"></i>
@@ -107,7 +107,7 @@ const siteHeader = `
 // ===================== CART SIDEBAR =====================
 const cartSidebar = `
 <div id="cart-overlay" onclick="toggleCart()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:8997;"></div>
-<div id="cart-sidebar" data-open="false" style="position:fixed;top:0;right:0;width:100%;max-width:400px;height:100vh;background:white;box-shadow:-10px 0 30px rgba(0,0,0,0.2);transform:translateX(110%);visibility:hidden;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);z-index:8998;display:flex;flex-direction:column;">
+<div id="cart-sidebar" data-open="false" style="position:fixed;top:5vh;right:0;width:100%;max-width:400px;height:90vh;border-radius:1rem 0 0 1rem;background:white;box-shadow:-10px 0 30px rgba(0,0,0,0.2);transform:translateX(110%);visibility:hidden;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);z-index:8998;display:flex;flex-direction:column;">
     <div style="background:#064e3b;color:white;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
         <h3 style="margin:0;font-size:1.2rem;font-weight:700;">🛍️ Shopping Bag</h3>
         <button onclick="toggleCart()" style="background:none;border:none;color:white;font-size:2rem;line-height:1;cursor:pointer;padding:0;">&times;</button>
@@ -1083,14 +1083,36 @@ async function loadUserCartAndWishlist(uid) {
         // must not be lost if Firebase returns stale / empty data.
         const preLoadWishlist = [...wishlist];
 
-        // Try to fetch user doc
+        // Force token refresh so Firestore auth is valid (critical after re-login)
         try {
-            const userDoc = await db.collection('users').doc(uid).get();
-            if (userDoc.exists) {
-                data = userDoc.data();
+            const currentUser = firebase.auth().currentUser;
+            if (currentUser) await currentUser.getIdToken(true);
+        } catch(e) {
+            console.warn('Token refresh warning:', e.message);
+        }
+
+        // Read from carts/{uid} (primary) — simple isOwner rules, no field restrictions
+        // Fall back to users/{uid} for legacy data saved before this migration
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const cartDoc = await db.collection('carts').doc(uid).get();
+                if (cartDoc.exists) {
+                    data = cartDoc.data();
+                } else {
+                    // Legacy fallback: check users/{uid}
+                    const userDoc = await db.collection('users').doc(uid).get();
+                    if (userDoc.exists) {
+                        const ud = userDoc.data();
+                        if (ud.cart || ud.wishlist) {
+                            data = { cart: ud.cart || {}, wishlist: ud.wishlist || [] };
+                        }
+                    }
+                }
+                break; // success
+            } catch (e) {
+                console.warn(`Could not fetch cart doc (attempt ${attempt + 1}):`, e.message);
+                if (attempt < 2) await new Promise(r => setTimeout(r, 800));
             }
-        } catch (e) {
-            console.warn('Could not fetch user doc for cart/wishlist:', e.message);
         }
 
         // Process wishlist
@@ -1149,6 +1171,13 @@ async function loadUserCartAndWishlist(uid) {
         }
 
         // Process cart similarly...
+        // Snapshot local cart BEFORE any Firebase overwrite (same orphan-merge pattern as wishlist)
+        let localCartSnapshot = {};
+        try {
+            const lcs = localStorage.getItem('cart');
+            if (lcs) localCartSnapshot = JSON.parse(lcs);
+        } catch(e) {}
+
         if (data.cart && typeof data.cart === 'object' && Object.keys(data.cart).length > 0) {
             const enrichedCart = {};
             for (const [id, item] of Object.entries(data.cart)) {
@@ -1173,15 +1202,22 @@ async function loadUserCartAndWishlist(uid) {
                 }
             }
 
+            // Merge: restore any local cart items not yet synced to Firebase
+            const fbCartIds = new Set(Object.keys(enrichedCart));
+            for (const [id, localItem] of Object.entries(localCartSnapshot)) {
+                if (!fbCartIds.has(id) && localItem.qty > 0) {
+                    enrichedCart[id] = localItem;
+                }
+            }
+
             cart = enrichedCart;
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartUI();
         } else {
             // Firebase has no cart — preserve any locally stored cart (e.g. just added before sync)
-            try {
-                const localCart = localStorage.getItem('cart');
-                if (localCart) cart = JSON.parse(localCart);
-            } catch(e) {}
+            if (Object.keys(localCartSnapshot).length > 0) {
+                cart = localCartSnapshot;
+            }
             updateCartUI();
         }
 
@@ -1235,7 +1271,13 @@ async function saveUserCartAndWishlist() {
             console.log('No user logged in, skipping Firebase save');
             return;
         }
-        
+
+        // Guard: Firestore may not be loaded yet (dynamic script loading)
+        if (!firebase.firestore) {
+            console.warn('Firestore not ready yet — data kept in localStorage, will sync later');
+            return;
+        }
+
         const db = firebase.firestore();
         
         // Clean cart data - remove undefined values
@@ -1250,24 +1292,24 @@ async function saveUserCartAndWishlist() {
                 op: item.op || item.originalPrice || item.p || 0
             };
         });
-        
+
         // Clean wishlist data
         const cleanWishlist = wishlist.map(item => {
             const clean = { ...item };
-            // Remove undefined values
             Object.keys(clean).forEach(k => {
                 if (clean[k] === undefined) delete clean[k];
             });
             return clean;
         });
-        
-        await db.collection('users').doc(user.uid).set({
+
+        // Save to carts/{uid} — rules are just isOwner(), no required-field restrictions
+        await db.collection('carts').doc(user.uid).set({
             cart: cleanCart,
             wishlist: cleanWishlist,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        
-        console.log('✅ Cart/wishlist saved to Firebase');
+        });
+
+        console.log('✅ Cart/wishlist saved to Firebase (carts collection)');
     } catch(e) { 
         console.error('Failed to save to Firebase:', e);
         throw e; // Re-throw so caller can handle
@@ -2194,6 +2236,29 @@ const sharedStyles = `
     @media (max-width:1023px){
         .login-icon {display:none;}
     }
+
+    /* Popup size reduction on very small screens */
+    @media (max-width: 450px) {
+        .popup-content {
+            width: 93vw !important;
+            max-height: 88vh !important;
+            border-radius: 0.5rem !important;
+            margin: auto !important;
+        }
+        /* Heart to bottom-left: clear of × (top-right), offer badge (top-left), zoom (bottom-right) */
+        .popup-heart-btn {
+            bottom: 1rem !important;
+            left: 1rem !important;
+            top: auto !important;
+            right: auto !important;
+        }
+    }
+
+    /* Ensure cart & wishlist badges visible on all screen sizes */
+    #cart-badge, #wishlist-badge {
+        z-index: 10;
+        pointer-events: none;
+    }
 </style>
 `;
 
@@ -2971,9 +3036,14 @@ window.toggleWishlist = async function(event, id, name, btnElement = null) {
     if (idx >= 0) {
         // REMOVE from wishlist
         wishlist.splice(idx, 1);
-        
-        // Update UI
+
+        // Update UI — also update clicked button directly (search page has no data-product-id)
         updateAllHeartButtons(id, false);
+        if (btnElement) {
+            const icon = btnElement.querySelector('i');
+            if (icon) { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); icon.style.color = '#9ca3af'; }
+            btnElement.classList.remove('active', 'heart-active');
+        }
         showToast('Removed from wishlist', 'info');
         
         // If on wishlist page, animate removal
@@ -3033,7 +3103,14 @@ window.toggleWishlist = async function(event, id, name, btnElement = null) {
         }
         
         wishlist.push(productData);
+
+        // Update UI — also update clicked button directly (search page has no data-product-id)
         updateAllHeartButtons(id, true);
+        if (btnElement) {
+            const icon = btnElement.querySelector('i');
+            if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); icon.style.color = '#ef4444'; }
+            btnElement.classList.add('active', 'heart-active');
+        }
         showToast('Added to wishlist ❤️', 'success');
     }
     
