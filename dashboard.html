@@ -439,9 +439,38 @@
         }
 
         // ===================== REAL-TIME LISTENERS =====================
+
+        async function refreshPriceCount() {
+            const el = document.getElementById('priceUpdatesToday');
+            if (!el) return;
+            try {
+                const db = firebase.firestore();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                let count = 0;
+                try {
+                    const snap = await db.collection('priceHistory')
+                        .where('updatedAt', '>=', firebase.firestore.Timestamp.fromDate(today))
+                        .get();
+                    count = snap.size;
+                } catch {}
+                if (count === 0) {
+                    try {
+                        const priceDoc = await db.collection('prices').doc('current').get();
+                        if (priceDoc.exists) {
+                            const updatedAt = priceDoc.data().updatedAt;
+                            const updatedDate = updatedAt?.toDate ? updatedAt.toDate() : new Date(updatedAt);
+                            count = updatedDate >= today ? 1 : 0;
+                        }
+                    } catch {}
+                }
+                el.textContent = count.toLocaleString();
+            } catch {}
+        }
+
         function setupRealTimeListeners() {
             const db = firebase.firestore();
-            
+
             // Prices listener
             if (priceListener) priceListener();
             priceListener = db.collection('prices').doc('current').onSnapshot((doc) => {
@@ -450,6 +479,7 @@
                     updatePriceDisplay('statGoldMarket', d.goldMarketPrice);
                     updatePriceDisplay('statGoldSKJ', d.goldSKJPrice);
                     updatePriceDisplay('statSilverMarket', d.silverMarketPrice);
+                    refreshPriceCount();
                 }
             }, (err) => {
                 console.error('Price listener error:', err);

@@ -1510,24 +1510,25 @@
                     skjg: data.goldSKJPrice || 0,
                     silver: data.silverMarketPrice || 0
                 };
-                const goldRate = inventoryCachedPrices.gold;
+                const skj22Rate = inventoryCachedPrices.skjg; // 22CT — MC% is based on 22CT price
                 console.log('✅ Inventory prices updated:', inventoryCachedPrices);
 
                 // Auto-update Making Charge % fields when gold price changes
-                if (goldRate > 0) {
+                if (skj22Rate > 0) {
                     // Create form
                     const pctInput = document.getElementById('prod-making-charge-pct');
                     const mcInput = document.getElementById('prod-making-charges');
                     if (pctInput && mcInput) {
                         const pct = parseFloat(pctInput.value) || 0;
                         if (pct > 0) {
-                            const calcMC = parseFloat((goldRate * pct / 100).toFixed(2));
+                            const calcMC = parseFloat((skj22Rate * pct / 100).toFixed(2));
                             mcInput.value = calcMC;
                             const pv = document.getElementById('pct-mc-result');
                             if (pv) pv.textContent = calcMC;
                             const pp = document.getElementById('pct-calc-preview');
                             if (pp) pp.style.display = 'block';
                             if (typeof calculateTotalMakingCharges === 'function') calculateTotalMakingCharges();
+                            if (typeof calculateAutoPrice === 'function') calculateAutoPrice();
                         }
                     }
                     // Edit form
@@ -1536,13 +1537,14 @@
                     if (editPctInput && editMcInput) {
                         const pct = parseFloat(editPctInput.value) || 0;
                         if (pct > 0) {
-                            const calcMC = parseFloat((goldRate * pct / 100).toFixed(2));
+                            const calcMC = parseFloat((skj22Rate * pct / 100).toFixed(2));
                             editMcInput.value = calcMC;
                             const pv = document.getElementById('edit-pct-mc-result');
                             if (pv) pv.textContent = calcMC;
                             const pp = document.getElementById('edit-pct-calc-preview');
                             if (pp) pp.style.display = 'block';
                             if (typeof calculateEditTotalMakingCharges === 'function') calculateEditTotalMakingCharges();
+                            if (typeof calculateEditAutoPrice === 'function') calculateEditAutoPrice();
                         }
                     }
                 }
@@ -1660,9 +1662,9 @@
                 return;
             }
 
-            // If MC% is set and DP is ON, recalculate MC₹/gram from current gold price
-            if (mcPct > 0 && dynamicEnabled && goldRate > 0) {
-                makingCharges = parseFloat((goldRate * mcPct / 100).toFixed(2));
+            // If MC% is set and DP is ON, recalculate MC₹/gram from 22CT gold price
+            if (mcPct > 0 && dynamicEnabled && skjGoldRate > 0) {
+                makingCharges = parseFloat((skjGoldRate * mcPct / 100).toFixed(2));
                 document.getElementById('prod-making-charges').value = makingCharges;
                 totalMakingCharges = makingCharges * weight;
                 const previewVal = document.getElementById('pct-mc-result');
@@ -1932,7 +1934,7 @@
             }
         };
 
-        // When user types MC% → auto-calculate MC₹/gram from current gold price
+        // When user types MC% → auto-calculate MC₹/gram from 22CT gold price
         window.onMakingChargePctChange = async function() {
             const pct = parseFloat(document.getElementById('prod-making-charge-pct').value) || 0;
             const mcInput = document.getElementById('prod-making-charges');
@@ -1944,9 +1946,9 @@
                 try {
                     const pricesDoc = await getDoc(doc(db, 'prices', 'current'));
                     if (pricesDoc.exists()) {
-                        const goldRate = pricesDoc.data().goldMarketPrice || 0;
-                        if (goldRate > 0) {
-                            const calcMC = parseFloat((goldRate * pct / 100).toFixed(2));
+                        const skj22Rate = pricesDoc.data().goldSKJPrice || 0; // 22CT
+                        if (skj22Rate > 0) {
+                            const calcMC = parseFloat((skj22Rate * pct / 100).toFixed(2));
                             previewVal.textContent = calcMC;
                             preview.style.display = 'block';
                             mcInput.value = calcMC;
@@ -1971,9 +1973,9 @@
                 try {
                     const pricesDoc = await getDoc(doc(db, 'prices', 'current'));
                     if (pricesDoc.exists()) {
-                        const goldRate = pricesDoc.data().goldMarketPrice || 0;
-                        if (goldRate > 0) {
-                            const calcMC = parseFloat((goldRate * pct / 100).toFixed(2));
+                        const skj22Rate = pricesDoc.data().goldSKJPrice || 0; // 22CT
+                        if (skj22Rate > 0) {
+                            const calcMC = parseFloat((skj22Rate * pct / 100).toFixed(2));
                             previewVal.textContent = calcMC;
                             preview.style.display = 'block';
                             mcInput.value = calcMC;
@@ -2031,9 +2033,9 @@
                 return;
             }
 
-            // If MC% is set, recalculate MC₹/gram from current gold price
-            if (editMcPct > 0 && goldRate > 0) {
-                makingCharges = parseFloat((goldRate * editMcPct / 100).toFixed(2));
+            // If MC% is set, recalculate MC₹/gram from 22CT gold price
+            if (editMcPct > 0 && skjGoldRate > 0) {
+                makingCharges = parseFloat((skjGoldRate * editMcPct / 100).toFixed(2));
                 document.getElementById('edit-making-charges').value = makingCharges;
                 totalMakingCharges = makingCharges * weight;
                 const previewVal = document.getElementById('edit-pct-mc-result');
@@ -2492,11 +2494,17 @@
                 // Dynamic price calculation based on live gold/silver rates
                 let displayPrice = product.offerPrice || product.price || 0;
                 let originalPrice = product.originalPrice || displayPrice;
+                let liveMcPerGram = product.makingCharges || 0; // shown on card tag
 
                 if (product.dynamicPricing && product.weight) {
+                    const skj22Rate = inventoryCachedPrices.skjg || 6200;
                     if (product.metalType === 'gold') {
-                        const ratePerGram = product.carat === '24CT' ? inventoryCachedPrices.gold : (inventoryCachedPrices.skjg || 6200);
-                        const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
+                        const ratePerGram = product.carat === '24CT' ? inventoryCachedPrices.gold : skj22Rate;
+                        // If MC% is set, recalculate MC₹/g live from 22CT rate; else use stored value
+                        liveMcPerGram = (product.makingChargePercent > 0)
+                            ? parseFloat((skj22Rate * product.makingChargePercent / 100).toFixed(2))
+                            : (product.makingCharges || 0);
+                        const makingCharges = liveMcPerGram * parseFloat(product.weight);
                         const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
                         let discountAmt = product.discountAmount || 0;
                         if (!discountAmt && product.discountPercent > 0) {
@@ -2506,7 +2514,11 @@
                         displayPrice = basePrice - discountAmt;
                     } else if (product.metalType === 'silver') {
                         const ratePerGram = (inventoryCachedPrices.silver || 750) / 10;
-                        const makingCharges = (product.makingCharges || 0) * parseFloat(product.weight);
+                        // If MC% is set, recalculate MC₹/g live from silver rate; else use stored value
+                        liveMcPerGram = (product.makingChargePercent > 0)
+                            ? parseFloat((ratePerGram * product.makingChargePercent / 100).toFixed(2))
+                            : (product.makingCharges || 0);
+                        const makingCharges = liveMcPerGram * parseFloat(product.weight);
                         const basePrice = Math.round((parseFloat(product.weight) * ratePerGram) + makingCharges);
                         let discountAmt = product.discountAmount || 0;
                         if (!discountAmt && product.discountPercent > 0) {
@@ -2546,7 +2558,7 @@
                 <div class="card-tags">
                     <span class="tag category-tag">${product.category}</span>
                     <span class="tag weight-tag">${product.weight}g</span>
-                    ${product.makingCharges ? `<span class="tag" style="background: #dbeafe; color: #1e40af;">MC: ₹${product.makingCharges}/g</span>` : ''}
+                    ${liveMcPerGram ? `<span class="tag" style="background: #dbeafe; color: #1e40af;">MC: ₹${liveMcPerGram}/g</span>` : ''}
                 </div>
                 
                 <div class="card-price-section">

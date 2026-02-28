@@ -24,8 +24,8 @@ function getPriceCookie() {
 let cachedPrices = getPriceCookie();
 let firebasePricesInitialized = false;
 let priceUnsubscribe = null;
-let cart = {};
-let wishlist = [];
+let cart = (() => { try { const s = localStorage.getItem('cart'); return s ? JSON.parse(s) : {}; } catch(e) { return {}; } })();
+let wishlist = (() => { try { const s = localStorage.getItem('wishlist'); return s ? JSON.parse(s) : []; } catch(e) { return []; } })();
 let _currentUser = null;
 
 // Auth stabilization variables - MUST be declared here, not inside functions
@@ -1077,7 +1077,12 @@ async function loadUserCartAndWishlist(uid) {
     try {
         const db = firebase.firestore();
         let data = {};
-        
+
+        // Snapshot current in-memory wishlist BEFORE any async work.
+        // Items here (from localStorage pre-population or a concurrent toggleWishlist)
+        // must not be lost if Firebase returns stale / empty data.
+        const preLoadWishlist = [...wishlist];
+
         // Try to fetch user doc
         try {
             const userDoc = await db.collection('users').doc(uid).get();
@@ -1090,7 +1095,7 @@ async function loadUserCartAndWishlist(uid) {
 
         // Process wishlist
         const storedWishlist = (data.wishlist && Array.isArray(data.wishlist)) ? data.wishlist : [];
-        
+
         // Enrich with product data
         const enrichedWishlist = [];
         for (const item of storedWishlist) {
@@ -1099,7 +1104,7 @@ async function loadUserCartAndWishlist(uid) {
                 if (productDoc.exists) {
                     const productData = productDoc.data();
                     const livePrice = await calculateLivePrice(productData);
-                    
+
                     enrichedWishlist.push({
                         ...item,
                         name: productData.name || item.name,
@@ -1117,11 +1122,26 @@ async function loadUserCartAndWishlist(uid) {
                 enrichedWishlist.push(item);
             }
         }
-        
-        wishlist = enrichedWishlist;
-        localStorage.setItem('wishlist', JSON.stringify(wishlist));
-        updateWishlistUI();
-        syncHeartButtons();
+
+        // Merge: restore any items that were in local memory but missing from Firebase.
+        // This handles two cases:
+        //   1. Race condition — user added item while this fetch was in-flight
+        //   2. Previous save failed silently (e.g. auth was temporarily null)
+        const fbIds = new Set(enrichedWishlist.map(i => i.id));
+        const orphans = preLoadWishlist.filter(i => i.id && !fbIds.has(i.id));
+        if (orphans.length > 0) {
+            wishlist = [...enrichedWishlist, ...orphans];
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+            updateWishlistUI();
+            syncHeartButtons();
+            // Re-push orphaned items to Firebase so they're persisted
+            saveUserCartAndWishlist().catch(e => console.warn('Re-sync after merge:', e));
+        } else {
+            wishlist = enrichedWishlist;
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+            updateWishlistUI();
+            syncHeartButtons();
+        }
 
         // Refresh wishlist page if on it
         if (window.location.pathname.includes('wishlist.html') && typeof renderWishlistPage === 'function') {
@@ -1210,7 +1230,7 @@ async function calculateLivePrice(product) {
 // Save cart/wishlist to Firebase for logged-in user
 async function saveUserCartAndWishlist() {
     try {
-        const user = firebase.auth ? firebase.auth().currentUser : null;
+        const user = (firebase.auth ? firebase.auth().currentUser : null) || _currentUser;
         if (!user) {
             console.log('No user logged in, skipping Firebase save');
             return;
