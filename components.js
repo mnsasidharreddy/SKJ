@@ -1476,7 +1476,7 @@ const siteFooter = `
         <div>
             <h5 class="text-amber-500 font-bold text-base md:text-lg mb-4 md:mb-8 uppercase tracking-[0.15em] md:tracking-[0.2em]">Address</h5>
             <p class="opacity-70 mb-2 font-bold text-sm md:text-base">Sai Kiran Jewelleries A/C Showroom</p>
-            <p class="opacity-70 mb-6 md:mb-8 text-xs md:text-sm leading-relaxed">71-1-17, Opp RR Chicken, Canara Bank Rd, JD Nagar, Patamata, Vijayawada, Andhra Pradesh 520010</p>
+            <p class="opacity-70 mb-6 md:mb-8 text-xs md:text-sm leading-relaxed">71-1-17, Opp RR Chicken, Canara Bank Rd, JD Nagar, Patamata, Vijayawada, Andhra Pradesh - 520010</p>
             <div class="flex space-x-4 md:space-x-6 text-2xl md:text-4xl">
                 <a href="https://www.facebook.com/share/18LinN4tpZ/?mibextid=wwXIfr" class="social-icon text-gray-300 transition" title="Follow us on Facebook"><i class="fa-brands fa-facebook"></i></a>
                 <a href="https://wa.me/919705373804" class="social-icon text-gray-300 transition" title="WhatsApp Us"><i class="fa-brands fa-whatsapp"></i></a>
@@ -3528,5 +3528,6 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
+
 
 
