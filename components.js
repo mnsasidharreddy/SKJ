@@ -97,8 +97,13 @@ const siteHeader = `
     <!-- Price Marquee -->
     <div style="position:relative;background:#004d40;overflow:hidden;">
         <div class="gold-border-top"></div>
-        <div class="marquee-container" id="live-marquee" style="color:white;padding:6px 0;">
-            <!-- Filled by renderMarqueeContent() -->
+        <div style="display:flex;align-items:stretch;">
+            <div class="date-block-wrapper">
+                <div class="date-block-inner" id="marquee-date-label" style="border-width:2px;border-color:#D4AF37;"></div>
+            </div>
+            <div class="marquee-container" id="live-marquee" style="color:white;padding:6px 0;flex:1;overflow:hidden;">
+                <!-- Filled by renderMarqueeContent() -->
+            </div>
         </div>
         <div class="gold-border-bottom"></div>
     </div>
@@ -1850,7 +1855,38 @@ const sharedStyles = `
         0%   { background-position: -100% 0; }
         100% { background-position: 100% 0; }
     }
-    
+
+    /* Rotating gold border for date block */
+    @property --angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+    }
+    @keyframes rotateBorder {
+        to { --angle: 360deg; }
+    }
+    .date-block-wrapper {
+        flex-shrink: 0;
+        padding: 2px;
+        background: conic-gradient(from var(--angle), #3d2e00, #D4AF37, #fff8dc, #D4AF37, #3d2e00);
+        animation: rotateBorder 3s linear infinite;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-self: stretch;
+    }
+    .date-block-inner {
+        background: #004d40;
+        color: #D4AF37;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 3px 12px;
+        white-space: nowrap;
+        letter-spacing: 0.04em;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
     /* Heart Button - Red outline on hover (not filled) */
     .heart-btn { border: none !important; border-radius: 999px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; color: white; background: transparent; cursor: pointer; transition: all 0.3s ease; }
     
@@ -2466,6 +2502,31 @@ function renderPrices(prices) {
         setPriceCookie(prices);
     }
     renderMarqueeContent(cachedPrices);
+
+    // Inject date into marquee date block
+    /*const now = new Date();
+    const dayEl = document.getElementById('marquee-date-day');
+    const monthEl = document.getElementById('marquee-date-month');
+    const yearEl = document.getElementById('marquee-date-year');
+    if (dayEl) dayEl.textContent = now.toLocaleString('en-IN', { weekday: 'short' }).toUpperCase();
+    if (monthEl) monthEl.textContent = now.toLocaleString('en-IN', { day: '2-digit', month: 'short' });
+    if (yearEl) yearEl.textContent = now.getFullYear();*/
+
+    function updateMarqueeDate() {
+        const dateLabel = document.getElementById('marquee-date-label');
+        if (!dateLabel) return;
+        const now = new Date();
+        dateLabel.textContent = now.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    updateMarqueeDate();
+
+    // Auto-refresh at midnight
+    const now2 = new Date();
+    const msUntilMidnight = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate() + 1) - now2;
+    setTimeout(() => {
+        updateMarqueeDate();
+        setInterval(updateMarqueeDate, 86400000); // then every 24h
+    }, msUntilMidnight);
 
     
     // Notify pages that prices changed (e.g. re-render trending)
@@ -3629,7 +3690,6 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
-
 
 
 
