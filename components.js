@@ -92,8 +92,18 @@ const siteHeader = `
             </a>
         </div>
     </nav>
-    
+
+
     <!-- Price Marquee -->
+    <div style="position:relative;background:#004d40;overflow:hidden;">
+        <div class="gold-border-top"></div>
+        <div class="marquee-container" id="live-marquee" style="color:white;padding:6px 0;">
+            <!-- Filled by renderMarqueeContent() -->
+        </div>
+        <div class="gold-border-bottom"></div>
+    </div>
+    
+    <!-- Price Marquee 
     <div style="position:relative;background:#004d40;display:flex;align-items:stretch;">
         <div class="gold-border-top"></div>
         <div id="marquee-date-block" style="flex-shrink:0;background:#D4AF37;color:#000;font-size:0.7rem;font-weight:700;padding:4px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.3;z-index:1;">
@@ -105,7 +115,7 @@ const siteHeader = `
             <!-- Filled by renderMarqueeContent() -->
         </div>
         <div class="gold-border-bottom"></div>
-    </div>
+    </div> -->
 </header>
 `;
 
@@ -2472,13 +2482,13 @@ function renderPrices(prices) {
     renderMarqueeContent(cachedPrices);
 
     // Inject date into marquee date block
-    const now = new Date();
+    /*const now = new Date();
     const dayEl = document.getElementById('marquee-date-day');
     const monthEl = document.getElementById('marquee-date-month');
     const yearEl = document.getElementById('marquee-date-year');
     if (dayEl) dayEl.textContent = now.toLocaleString('en-IN', { weekday: 'short' }).toUpperCase();
     if (monthEl) monthEl.textContent = now.toLocaleString('en-IN', { day: '2-digit', month: 'short' });
-    if (yearEl) yearEl.textContent = now.getFullYear();
+    if (yearEl) yearEl.textContent = now.getFullYear();*/
 
     
     // Notify pages that prices changed (e.g. re-render trending)
@@ -3642,6 +3652,7 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
+
 
 
 
