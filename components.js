@@ -587,6 +587,7 @@ window.panelVerifyOtp = async function() {
         document.getElementById('panel-reg-email-display').textContent = email;
         const dot3 = document.getElementById('pdot-3');
         if (dot3) dot3.className = 'w-3 h-3 rounded-full bg-emerald-900';
+        showToast('📧 Verification email sent! Please check your inbox — and don\'t forget to check your spam folder too.', 'success');
     } catch(err) {
         let msg = 'Verification failed. Please try again.';
         if (err.code === 'auth/invalid-verification-code') msg = 'Incorrect OTP. Please check and retry.';
@@ -3625,6 +3626,7 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
+
 
 
 
