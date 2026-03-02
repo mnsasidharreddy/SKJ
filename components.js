@@ -1065,7 +1065,7 @@ function showToast(message, type = 'info') {
         toast.style.transform = 'translate(-50%, 20px)';
         toast.style.transition = 'all 0.3s ease';
         setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 7000);
 }
 
 // Listen for auth state changes
@@ -3361,7 +3361,7 @@ function showSuccessMessage(message) {
     setTimeout(() => {
         toast.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 6500);
 }
 
 function showSafetyConfirmation() {
@@ -3626,6 +3626,7 @@ window.addEventListener('beforeunload', () => {
     if (priceUnsubscribe) priceUnsubscribe();
 
 });
+
 
 
 
